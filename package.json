@@ -2,6 +2,7 @@
   "name": "caderno-estudos",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://EliziaLimaFortaleza.github.io/caderno-estudos",
   "dependencies": {
     "@headlessui/react": "^2.2.4",
     "@heroicons/react": "^2.2.0",
@@ -14,6 +15,7 @@
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "firebase": "^11.9.1",
+    "gh-pages": "^6.3.0",
     "postcss-flexbugs-fixes": "^4.2.1",
     "postcss-preset-env": "^6.7.2",
     "react": "^19.1.0",
@@ -27,7 +29,9 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "eslintConfig": {
     "extends": [
