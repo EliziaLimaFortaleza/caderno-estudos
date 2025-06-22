@@ -1,46 +1,198 @@
-# Getting Started with Create React App
+# 📚 Caderno de Estudos
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Uma aplicação completa para gerenciar seus estudos, revisões e caderno de erros, desenvolvida com React, TypeScript, Tailwind CSS e Firebase.
 
-## Available Scripts
+## ✨ Funcionalidades
 
-In the project directory, you can run:
+### 🔹 Cadastro de Estudo
+- ✅ Cadastro de novos registros de estudo (Concurso, Cargo, Matéria, Assunto)
+- ✅ Edição e exclusão de registros
+- ✅ Listagem organizada dos estudos
 
-### `npm start`
+### 🔹 Revisão de Conteúdo
+- ✅ Marcar estudos para revisão
+- ✅ Controle de datas de estudo e revisão
+- ✅ Listagem de revisões pendentes com ordenação por data
+- ✅ Alertas de atraso nas revisões
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+### 🔹 Painel de Desempenho
+- ✅ Estatísticas completas (total de assuntos, revisões, taxa de acerto)
+- ✅ Desempenho por matéria
+- ✅ Gráficos e indicadores visuais
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+### 🔹 Caderno de Erros
+- ✅ Cadastro manual de questões
+- ✅ Associação de questões a assuntos
+- ✅ Comentários pessoais sobre questões
+- ✅ Controle de acertos/erros
+- ✅ Visualização e refazimento de questões
 
-### `npm test`
+### 🔹 Sistema de Autenticação
+- ✅ Login e cadastro de usuários
+- ✅ Autenticação segura com Firebase
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## 🛠️ Tecnologias Utilizadas
 
-### `npm run build`
+- **Frontend**: React 18 + TypeScript
+- **Styling**: Tailwind CSS
+- **Backend**: Firebase (Authentication + Firestore)
+- **Build Tool**: Create React App
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## 🚀 Como Configurar
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### 1. Pré-requisitos
+- Node.js (versão 14 ou superior)
+- npm ou yarn
+- Conta no Firebase
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### 2. Configuração do Firebase
 
-### `npm run eject`
+1. Acesse [console.firebase.google.com](https://console.firebase.google.com)
+2. Crie um novo projeto
+3. Ative a autenticação por email/senha
+4. Crie um banco Firestore
+5. Obtenha as credenciais do projeto
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+### 3. Configuração da Aplicação
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+1. Clone o repositório:
+```bash
+git clone <url-do-repositorio>
+cd caderno-estudos
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+2. Instale as dependências:
+```bash
+npm install
+```
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+3. Configure o Firebase:
+   - Abra o arquivo `src/firebase.ts`
+   - Substitua as configurações pelas suas credenciais do Firebase:
 
-## Learn More
+```typescript
+const firebaseConfig = {
+  apiKey: "sua-api-key",
+  authDomain: "seu-projeto.firebaseapp.com",
+  projectId: "seu-projeto",
+  storageBucket: "seu-projeto.appspot.com",
+  messagingSenderId: "seu-sender-id",
+  appId: "seu-app-id"
+};
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+4. Execute a aplicação:
+```bash
+npm start
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+A aplicação estará disponível em `http://localhost:3000`
+
+## 📱 Como Usar
+
+### 1. Primeiro Acesso
+- Crie uma conta com email e senha
+- Faça login na aplicação
+
+### 2. Cadastrando Estudos
+- Vá para a aba "Novo Estudo"
+- Preencha: Concurso, Cargo, Matéria e Assunto
+- Clique em "Criar Estudo"
+
+### 3. Gerenciando Revisões
+- Na lista de estudos, clique em "Marcar para Revisar"
+- As revisões aparecerão na aba "Revisões"
+- Marque como "Concluída" quando revisar
+
+### 4. Caderno de Erros
+- Vá para a aba "Caderno de Erros"
+- Clique em "Nova Questão"
+- Associe a um assunto e adicione o enunciado
+- Marque se acertou ou errou a questão
+
+### 5. Acompanhando Desempenho
+- Acesse a aba "Desempenho"
+- Visualize estatísticas e progresso
+- Acompanhe taxa de acerto por matéria
+
+## 🎨 Interface
+
+A aplicação possui uma interface moderna e responsiva:
+- Design limpo e intuitivo
+- Navegação por abas
+- Cards organizados
+- Indicadores visuais de progresso
+- Responsivo para mobile e desktop
+
+## 🔧 Estrutura do Projeto
+
+```
+src/
+├── components/          # Componentes React
+│   ├── Dashboard.tsx
+│   ├── Login.tsx
+│   ├── Signup.tsx
+│   ├── ListaEstudos.tsx
+│   ├── FormularioEstudo.tsx
+│   ├── PainelDesempenho.tsx
+│   ├── ListaRevisoes.tsx
+│   └── CadernoErros.tsx
+├── contexts/           # Contextos React
+│   └── AuthContext.tsx
+├── services/          # Serviços para Firebase
+│   ├── estudoService.ts
+│   ├── revisaoService.ts
+│   └── questaoService.ts
+├── types/             # Tipos TypeScript
+│   └── index.ts
+├── firebase.ts        # Configuração Firebase
+└── App.tsx           # Componente principal
+```
+
+## 📊 Banco de Dados (Firestore)
+
+A aplicação utiliza as seguintes coleções:
+
+- **estudos**: Registros de estudos dos usuários
+- **revisoes**: Controle de revisões pendentes
+- **questoes**: Caderno de erros com questões
+- **usuarios**: Perfis dos usuários (futuro)
+
+## 🚀 Deploy
+
+Para fazer deploy da aplicação:
+
+1. Build da aplicação:
+```bash
+npm run build
+```
+
+2. Deploy no Firebase Hosting:
+```bash
+npm install -g firebase-tools
+firebase login
+firebase init hosting
+firebase deploy
+```
+
+## 🤝 Contribuindo
+
+1. Faça um fork do projeto
+2. Crie uma branch para sua feature
+3. Commit suas mudanças
+4. Push para a branch
+5. Abra um Pull Request
+
+## 📝 Licença
+
+Este projeto está sob a licença MIT.
+
+## 🆘 Suporte
+
+Para dúvidas ou problemas:
+- Abra uma issue no GitHub
+- Entre em contato através do email
+
+---
+
+**Desenvolvido com ❤️ para ajudar nos estudos!**
