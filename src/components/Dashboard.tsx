@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Estudo } from '../types';
 import { estudoService } from '../services/estudoService';
+import { usuarioService } from '../services/usuarioService';
 import { ListaEstudos } from './ListaEstudos';
 import { PainelDesempenho } from './PainelDesempenho';
 import { ListaRevisoes } from './ListaRevisoes';
@@ -14,10 +15,12 @@ export function Dashboard() {
   const [activeTab, setActiveTab] = useState<TabType>('desempenho');
   const [estudos, setEstudos] = useState<Estudo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [configuracao, setConfiguracao] = useState<any>({ meuApelido: '' });
 
   useEffect(() => {
     if (currentUser) {
       carregarEstudos();
+      carregarConfiguracao();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
@@ -35,6 +38,20 @@ export function Dashboard() {
       console.error('Erro ao carregar estudos:', error);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function carregarConfiguracao() {
+    if (!currentUser) return;
+    try {
+      const config = await usuarioService.obterConfiguracao(currentUser.uid) as any;
+      if (config) {
+        setConfiguracao({
+          meuApelido: config.meuApelido || ''
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao carregar configuração:', error);
     }
   }
 
@@ -66,7 +83,7 @@ export function Dashboard() {
             </div>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-500">
-                Olá, {currentUser?.email}
+                Olá, {configuracao.meuApelido || currentUser?.email?.split('@')[0] || 'Usuário'}
               </span>
               <button
                 onClick={handleLogout}

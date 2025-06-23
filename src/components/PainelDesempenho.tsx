@@ -219,32 +219,12 @@ export function PainelDesempenho({ estudos }: PainelDesempenhoProps) {
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold text-gray-900">Painel de Desempenho</h2>
-          <div className="flex items-center space-x-4">
-            {/* Campo de apelido sempre visível */}
-            <div className="flex items-center space-x-2">
-              <label className="text-sm font-medium text-gray-700">Meu Apelido:</label>
-              <input
-                type="text"
-                value={configuracao.meuApelido}
-                onChange={(e) => setConfiguracao({...configuracao, meuApelido: e.target.value})}
-                className="px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-                placeholder="Ex: João"
-                style={{ width: 100 }}
-              />
-              <button
-                onClick={salvarMeuApelido}
-                className="bg-green-600 text-white px-2 py-1 rounded text-xs font-medium hover:bg-green-700"
-              >
-                Salvar
-              </button>
-            </div>
-            <button
-              onClick={() => setEditandoConfig(!editandoConfig)}
-              className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
-            >
-              {editandoConfig ? 'Cancelar' : 'Editar'}
-            </button>
-          </div>
+          <button
+            onClick={() => setEditandoConfig(!editandoConfig)}
+            className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
+          >
+            {editandoConfig ? 'Cancelar' : 'Editar'}
+          </button>
         </div>
         {/* PARCEIRO DE ESTUDOS */}
         <div className="mb-4">
