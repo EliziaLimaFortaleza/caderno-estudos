@@ -81,6 +81,9 @@ export function PainelDesempenho({ estudos, onApelidoAtualizado }: PainelDesempe
           apelidoParceiro: config.apelidoParceiro || '',
           meuApelido: config.meuApelido || ''
         });
+        if (config.apelidoParceiro) {
+          setConfiguracao(prev => ({ ...prev, apelidoParceiro: config.apelidoParceiro }));
+        }
         if (config.parceiroEmail) {
           await carregarParceiro(config.parceiroEmail);
         }

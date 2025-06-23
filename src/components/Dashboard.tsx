@@ -56,7 +56,7 @@ export function Dashboard() {
   }
 
   function atualizarApelido(apelido: string) {
-    setConfiguracao(prev => ({ ...prev, meuApelido: apelido }));
+    setConfiguracao((prev: any) => ({ ...prev, meuApelido: apelido }));
   }
 
   async function handleLogout() {

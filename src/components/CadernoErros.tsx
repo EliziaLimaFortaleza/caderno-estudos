@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Estudo, Questao } from '../types';
 import { questaoService } from '../services/questaoService';
 import { usuarioService } from '../services/usuarioService';
-import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 
 interface CadernoErrosProps {
