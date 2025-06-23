@@ -56,16 +56,22 @@ export const questaoService = {
   },
 
   async buscarQuestoesPorUsuario(userId: string): Promise<Questao[]> {
+    console.log('Buscando questões para usuário:', userId);
+    
     const q = query(
       collection(db, 'questoes'),
       where('userId', '==', userId)
     );
     
     const querySnapshot = await getDocs(q);
+    console.log('Questões encontradas para usuário', userId, ':', querySnapshot.size);
+    
     const questoes = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     })) as Questao[];
+    
+    console.log('Questões mapeadas:', questoes);
     
     // Ordenar por data de criação (mais recente primeiro)
     return questoes.sort((a, b) => {

@@ -37,12 +37,20 @@ export function PainelDesempenho({ estudos }: PainelDesempenhoProps) {
     if (!currentUser && !parceiroId) return;
     const uid = parceiroId || currentUser?.uid;
     if (!uid) return;
+    
+    console.log('Carregando dados para usuário:', uid, 'É parceiro?', !!parceiroId);
+    
     try {
       setLoading(true);
       const [revisoesData, questoesData] = await Promise.all([
         revisaoService.buscarRevisoesPorUsuario(uid),
         questaoService.buscarQuestoesPorUsuario(uid)
       ]);
+      
+      console.log('Dados carregados - Revisões:', revisoesData.length, 'Questões:', questoesData.length);
+      console.log('Revisões:', revisoesData);
+      console.log('Questões:', questoesData);
+      
       setRevisoes(revisoesData);
       setQuestoes(questoesData);
     } catch (error) {
@@ -141,9 +149,12 @@ export function PainelDesempenho({ estudos }: PainelDesempenhoProps) {
   async function carregarParceiro(email: string) {
     setCarregandoParceiro(true);
     try {
+      console.log('Carregando parceiro com email:', email);
       const parceiroData = await usuarioService.buscarUsuarioPorEmail(email);
+      console.log('Dados do parceiro carregados:', parceiroData);
       setParceiro(parceiroData);
     } catch (error) {
+      console.error('Erro ao carregar parceiro:', error);
       setParceiro(null);
     } finally {
       setCarregandoParceiro(false);

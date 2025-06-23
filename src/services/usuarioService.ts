@@ -122,19 +122,27 @@ export const usuarioService = {
 
   async buscarUsuarioPorEmail(email: string): Promise<ConfiguracaoUsuario | null> {
     try {
+      console.log('Buscando usuário por email:', email);
+      
       // Primeiro, tentar buscar na coleção usuarios
       const usuariosRef = collection(db, 'usuarios');
       const q = query(usuariosRef, where('email', '==', email));
       const querySnapshot = await getDocs(q);
       
+      console.log('Resultado da busca por email:', querySnapshot.size, 'documentos encontrados');
+      
       if (!querySnapshot.empty) {
         const userData = querySnapshot.docs[0].data() as ConfiguracaoUsuario;
-        return {
+        const result = {
           ...userData,
           userId: querySnapshot.docs[0].id
         };
+        console.log('Usuário encontrado:', result);
+        return result;
       }
 
+      console.log('Usuário não encontrado, criando documento básico...');
+      
       // Se não encontrou na coleção usuarios, criar um documento básico
       // Isso permite que usuários que ainda não têm configuração sejam adicionados como parceiros
       const novoUserId = `parceiro_${Date.now()}`;
@@ -147,6 +155,7 @@ export const usuarioService = {
       };
 
       await setDoc(doc(db, 'usuarios', novoUserId), novoUsuario);
+      console.log('Novo usuário criado:', novoUsuario);
       
       return novoUsuario;
     } catch (error: any) {
