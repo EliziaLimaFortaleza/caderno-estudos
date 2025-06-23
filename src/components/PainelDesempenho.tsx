@@ -234,6 +234,7 @@ export function PainelDesempenho({ estudos }: PainelDesempenhoProps) {
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold text-gray-900">Painel de Desempenho</h2>
           <div className="flex items-center space-x-4">
+            {/* Campo de apelido sempre visível */}
             <div className="flex items-center space-x-2">
               <label className="text-sm font-medium text-gray-700">Meu Apelido:</label>
               <input
