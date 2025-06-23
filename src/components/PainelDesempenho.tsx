@@ -217,12 +217,12 @@ export function PainelDesempenho({ estudos }: PainelDesempenhoProps) {
                           usuarioService.salvarApelidoParceiro(currentUser!.uid, novoApelido);
                         }
                       }}
-                      className="text-blue-600 hover:text-blue-800 text-xs font-medium"
+                      className="text-blue-600 hover:text-blue-800 text-xs font-medium p-1 rounded hover:bg-blue-50"
+                      title="Editar apelido"
                     >
-                      ✏️ Editar apelido
+                      ✏️
                     </button>
                   </div>
-                  <div className="text-sm text-gray-500">{configuracao.parceiroEmail}</div>
                 </div>
                 <button
                   onClick={removerParceiro}

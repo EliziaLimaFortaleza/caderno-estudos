@@ -53,17 +53,26 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
     if (!currentUser) return;
 
     try {
+      console.log('Carregando parceiro para usuário:', currentUser.uid);
       const config = await usuarioService.obterConfiguracao(currentUser.uid);
+      console.log('Configuração carregada:', config);
+      
       if (config?.parceiroEmail) {
+        console.log('Email do parceiro encontrado:', config.parceiroEmail);
         const parceiroData = await usuarioService.buscarUsuarioPorEmail(config.parceiroEmail);
+        console.log('Dados do parceiro:', parceiroData);
         setParceiro(parceiroData);
         setApelidoParceiro(config.apelidoParceiro || '');
         
         // Carregar questões do parceiro
         if (parceiroData) {
+          console.log('Carregando questões do parceiro com userId:', parceiroData.userId);
           const questoesParceiroData = await questaoService.buscarQuestoesPorUsuario(parceiroData.userId);
+          console.log('Questões do parceiro carregadas:', questoesParceiroData);
           setQuestoesParceiro(questoesParceiroData);
         }
+      } else {
+        console.log('Nenhum parceiro configurado');
       }
     } catch (error) {
       console.error('Erro ao carregar parceiro:', error);
@@ -195,7 +204,7 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
               onClick={() => setVisualizandoParceiro(!visualizandoParceiro)}
               className="bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-purple-700"
             >
-              {visualizandoParceiro ? 'Ver Minhas Questões' : `Ver Questões do ${apelidoParceiro || 'Parceiro'}`}
+              {visualizandoParceiro ? 'Ver Minhas Questões' : `Ver questões de ${apelidoParceiro || 'Parceiro'}`}
             </button>
           )}
           <button
@@ -218,11 +227,8 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
             </div>
             <div>
               <h4 className="text-sm font-semibold text-purple-900">
-                {parceiro.concurso || 'Concurso não definido'}
+                Questões de {apelidoParceiro || 'Parceiro'}
               </h4>
-              <p className="text-xs text-purple-700">
-                {parceiro.cargo || 'Cargo não definido'}
-              </p>
             </div>
           </div>
         </div>
