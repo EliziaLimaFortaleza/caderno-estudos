@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Estudo, Revisao, Questao } from '../types';
 import { revisaoService } from '../services/revisaoService';
 import { questaoService } from '../services/questaoService';
+import { usuarioService } from '../services/usuarioService';
 
 interface PainelDesempenhoProps {
   estudos: Estudo[];
@@ -13,10 +14,16 @@ export function PainelDesempenho({ estudos }: PainelDesempenhoProps) {
   const [revisoes, setRevisoes] = useState<Revisao[]>([]);
   const [questoes, setQuestoes] = useState<Questao[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editandoConfig, setEditandoConfig] = useState(false);
+  const [configuracao, setConfiguracao] = useState({
+    concurso: '',
+    cargo: ''
+  });
 
   useEffect(() => {
     if (currentUser) {
       carregarDados();
+      carregarConfiguracao();
     }
   }, [currentUser]);
 
@@ -36,6 +43,39 @@ export function PainelDesempenho({ estudos }: PainelDesempenhoProps) {
       console.error('Erro ao carregar dados do desempenho:', error);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function carregarConfiguracao() {
+    if (!currentUser) return;
+
+    try {
+      const config = await usuarioService.obterConfiguracao(currentUser.uid);
+      if (config) {
+        setConfiguracao({
+          concurso: config.concurso || '',
+          cargo: config.cargo || ''
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao carregar configuração:', error);
+    }
+  }
+
+  async function salvarConfiguracao() {
+    if (!currentUser) return;
+
+    try {
+      await usuarioService.salvarConfiguracao(
+        currentUser.uid,
+        configuracao.concurso,
+        configuracao.cargo
+      );
+      setEditandoConfig(false);
+      alert('Configuração salva com sucesso!');
+    } catch (error) {
+      console.error('Erro ao salvar configuração:', error);
+      alert('Erro ao salvar configuração');
     }
   }
 
@@ -76,7 +116,81 @@ export function PainelDesempenho({ estudos }: PainelDesempenhoProps) {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-900">Painel de Desempenho</h2>
+      {/* Cabeçalho com Concurso e Cargo */}
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold text-gray-900">Painel de Desempenho</h2>
+          <button
+            onClick={() => setEditandoConfig(!editandoConfig)}
+            className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
+          >
+            {editandoConfig ? 'Cancelar' : 'Editar'}
+          </button>
+        </div>
+
+        {editandoConfig ? (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Concurso
+                </label>
+                <input
+                  type="text"
+                  value={configuracao.concurso}
+                  onChange={(e) => setConfiguracao({...configuracao, concurso: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="Ex: Banco do Brasil"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Cargo
+                </label>
+                <input
+                  type="text"
+                  value={configuracao.cargo}
+                  onChange={(e) => setConfiguracao({...configuracao, cargo: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="Ex: Agente de Tecnologia"
+                />
+              </div>
+            </div>
+            <div className="flex space-x-2">
+              <button
+                onClick={salvarConfiguracao}
+                className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700"
+              >
+                Salvar
+              </button>
+              <button
+                onClick={() => setEditandoConfig(false)}
+                className="bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-4 rounded-lg">
+            <div className="flex items-center space-x-4">
+              <div className="p-2 bg-indigo-100 rounded-full">
+                <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2V6" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {configuracao.concurso || 'Concurso não definido'}
+                </h3>
+                <p className="text-sm text-gray-600">
+                  {configuracao.cargo || 'Cargo não definido'}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Cards de estatísticas gerais */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
