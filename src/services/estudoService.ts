@@ -68,8 +68,9 @@ export const estudoService = {
       console.log('Buscando estudos para usuário:', userId);
       const q = query(
         collection(db, 'estudos'),
-        where('userId', '==', userId),
-        orderBy('createdAt', 'desc')
+        where('userId', '==', userId)
+        // Removendo orderBy temporariamente para evitar problema de índice
+        // orderBy('createdAt', 'desc')
       );
       
       const querySnapshot = await getDocs(q);
@@ -77,6 +78,19 @@ export const estudoService = {
         id: doc.id,
         ...doc.data()
       })) as Estudo[];
+      
+      // Ordenar no JavaScript em vez de no Firestore
+      estudos.sort((a, b) => {
+        const dateA = a.createdAt instanceof Date ? a.createdAt : 
+          (a.createdAt && typeof a.createdAt === 'object' && 'seconds' in a.createdAt) 
+            ? new Date((a.createdAt as any).seconds * 1000) 
+            : new Date();
+        const dateB = b.createdAt instanceof Date ? b.createdAt : 
+          (b.createdAt && typeof b.createdAt === 'object' && 'seconds' in b.createdAt) 
+            ? new Date((b.createdAt as any).seconds * 1000) 
+            : new Date();
+        return dateB.getTime() - dateA.getTime();
+      });
       
       console.log('Estudos encontrados:', estudos);
       return estudos;
