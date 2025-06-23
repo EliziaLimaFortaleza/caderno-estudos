@@ -7,7 +7,6 @@ import {
   getDocs, 
   query, 
   where, 
-  orderBy,
   serverTimestamp 
 } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -35,30 +34,56 @@ export const revisaoService = {
   async buscarRevisoesPorUsuario(userId: string): Promise<Revisao[]> {
     const q = query(
       collection(db, 'revisoes'),
-      where('userId', '==', userId),
-      orderBy('dataRevisao', 'asc')
+      where('userId', '==', userId)
     );
     
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
+    const revisoes = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     })) as Revisao[];
+    
+    revisoes.sort((a, b) => {
+      const dateA = a.dataRevisao instanceof Date ? a.dataRevisao : 
+        (a.dataRevisao && typeof a.dataRevisao === 'object' && 'seconds' in a.dataRevisao) 
+          ? new Date((a.dataRevisao as any).seconds * 1000) 
+          : new Date();
+      const dateB = b.dataRevisao instanceof Date ? b.dataRevisao : 
+        (b.dataRevisao && typeof b.dataRevisao === 'object' && 'seconds' in b.dataRevisao) 
+          ? new Date((b.dataRevisao as any).seconds * 1000) 
+          : new Date();
+      return dateA.getTime() - dateB.getTime();
+    });
+    
+    return revisoes;
   },
 
   async buscarRevisoesPendentes(userId: string): Promise<Revisao[]> {
     const q = query(
       collection(db, 'revisoes'),
       where('userId', '==', userId),
-      where('status', '==', 'pendente'),
-      orderBy('dataRevisao', 'asc')
+      where('status', '==', 'pendente')
     );
     
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
+    const revisoes = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     })) as Revisao[];
+    
+    revisoes.sort((a, b) => {
+      const dateA = a.dataRevisao instanceof Date ? a.dataRevisao : 
+        (a.dataRevisao && typeof a.dataRevisao === 'object' && 'seconds' in a.dataRevisao) 
+          ? new Date((a.dataRevisao as any).seconds * 1000) 
+          : new Date();
+      const dateB = b.dataRevisao instanceof Date ? b.dataRevisao : 
+        (b.dataRevisao && typeof b.dataRevisao === 'object' && 'seconds' in b.dataRevisao) 
+          ? new Date((b.dataRevisao as any).seconds * 1000) 
+          : new Date();
+      return dateA.getTime() - dateB.getTime();
+    });
+    
+    return revisoes;
   },
 
   async marcarParaRevisao(estudoId: string, userId: string, dataRevisao: Date): Promise<string> {
