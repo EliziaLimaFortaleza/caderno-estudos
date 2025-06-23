@@ -77,5 +77,13 @@ export const questaoService = {
 
   async marcarQuestao(questaoId: string, acertou: boolean): Promise<void> {
     await this.atualizarQuestao(questaoId, { acertou });
+  },
+
+  async adicionarComentarioParaQuestao(questaoId: string, comentario: string): Promise<void> {
+    const docRef = doc(db, 'questoes', questaoId);
+    await updateDoc(docRef, {
+      comentarioParceiro: comentario,
+      updatedAt: serverTimestamp()
+    });
   }
 }; 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Estudo, Questao } from '../types';
 import { questaoService } from '../services/questaoService';
+import { usuarioService } from '../services/usuarioService';
 
 interface CadernoErrosProps {
   estudos: Estudo[];
@@ -10,6 +11,7 @@ interface CadernoErrosProps {
 export function CadernoErros({ estudos }: CadernoErrosProps) {
   const { currentUser } = useAuth();
   const [questoes, setQuestoes] = useState<Questao[]>([]);
+  const [questoesParceiro, setQuestoesParceiro] = useState<Questao[]>([]);
   const [loading, setLoading] = useState(true);
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [editandoId, setEditandoId] = useState<string | null>(null);
@@ -20,10 +22,15 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
     acertou: undefined as boolean | undefined,
     comentarioParceiro: ''
   });
+  const [parceiro, setParceiro] = useState<any>(null);
+  const [visualizandoParceiro, setVisualizandoParceiro] = useState(false);
+  const [comentarioParaQuestao, setComentarioParaQuestao] = useState('');
+  const [questaoParaComentar, setQuestaoParaComentar] = useState<string | null>(null);
 
   useEffect(() => {
     if (currentUser) {
       carregarQuestoes();
+      carregarParceiro();
     }
   }, [currentUser]);
 
@@ -38,6 +45,26 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
       console.error('Erro ao carregar questões:', error);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function carregarParceiro() {
+    if (!currentUser) return;
+
+    try {
+      const config = await usuarioService.obterConfiguracao(currentUser.uid);
+      if (config?.parceiroEmail) {
+        const parceiroData = await usuarioService.buscarUsuarioPorEmail(config.parceiroEmail);
+        setParceiro(parceiroData);
+        
+        // Carregar questões do parceiro
+        if (parceiroData) {
+          const questoesParceiroData = await questaoService.buscarQuestoesPorUsuario(parceiroData.userId);
+          setQuestoesParceiro(questoesParceiroData);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao carregar parceiro:', error);
     }
   }
 
@@ -98,6 +125,25 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
     }
   }
 
+  async function adicionarComentarioParaQuestao(questaoId: string) {
+    if (!comentarioParaQuestao.trim()) {
+      alert('Digite um comentário');
+      return;
+    }
+
+    try {
+      await questaoService.adicionarComentarioParaQuestao(questaoId, comentarioParaQuestao);
+      setComentarioParaQuestao('');
+      setQuestaoParaComentar(null);
+      await carregarQuestoes();
+      await carregarParceiro(); // Recarregar questões do parceiro
+      alert('Comentário adicionado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao adicionar comentário:', error);
+      alert('Erro ao adicionar comentário');
+    }
+  }
+
   function iniciarEdicao(questao: Questao) {
     setEditandoId(questao.id);
     setFormData({
@@ -126,6 +172,9 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
     return estudos.find(estudo => estudo.id === questao.estudoId);
   }
 
+  const questoesAtuais = visualizandoParceiro ? questoesParceiro : questoes;
+  const tituloSecao = visualizandoParceiro ? `Questões do Parceiro (${questoesParceiro.length})` : `Minhas Questões (${questoes.length})`;
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -138,16 +187,47 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">Caderno de Erros</h2>
-        <button
-          onClick={() => setMostrarFormulario(!mostrarFormulario)}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700"
-        >
-          {mostrarFormulario ? 'Cancelar' : 'Nova Questão'}
-        </button>
+        <div className="flex space-x-2">
+          {parceiro && (
+            <button
+              onClick={() => setVisualizandoParceiro(!visualizandoParceiro)}
+              className="bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-purple-700"
+            >
+              {visualizandoParceiro ? 'Ver Minhas Questões' : 'Ver Questões do Parceiro'}
+            </button>
+          )}
+          <button
+            onClick={() => setMostrarFormulario(!mostrarFormulario)}
+            className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700"
+          >
+            {mostrarFormulario ? 'Cancelar' : 'Nova Questão'}
+          </button>
+        </div>
       </div>
 
+      {/* Informações do parceiro quando visualizando suas questões */}
+      {visualizandoParceiro && parceiro && (
+        <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg border border-purple-200">
+          <div className="flex items-center space-x-4">
+            <div className="p-2 bg-purple-100 rounded-full">
+              <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </div>
+            <div>
+              <h4 className="text-sm font-semibold text-purple-900">
+                {parceiro.concurso || 'Concurso não definido'}
+              </h4>
+              <p className="text-xs text-purple-700">
+                {parceiro.cargo || 'Cargo não definido'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Formulário */}
-      {mostrarFormulario && (
+      {mostrarFormulario && !visualizandoParceiro && (
         <div className="bg-white rounded-lg shadow-md p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             {editandoId ? 'Editar Questão' : 'Nova Questão'}
@@ -242,17 +322,22 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
 
       {/* Lista de questões */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-gray-900">Minhas Questões ({questoes.length})</h3>
+        <h3 className="text-lg font-semibold text-gray-900">{tituloSecao}</h3>
         
-        {questoes.length === 0 ? (
+        {questoesAtuais.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">Nenhuma questão cadastrada ainda.</p>
-            <p className="text-gray-400 text-sm mt-2">Comece criando sua primeira questão!</p>
+            <p className="text-gray-500 text-lg">
+              {visualizandoParceiro ? 'Seu parceiro ainda não criou questões.' : 'Nenhuma questão cadastrada ainda.'}
+            </p>
+            <p className="text-gray-400 text-sm mt-2">
+              {visualizandoParceiro ? 'Peça para ele criar algumas questões!' : 'Comece criando sua primeira questão!'}
+            </p>
           </div>
         ) : (
           <div className="space-y-4">
-            {questoes.map((questao) => {
+            {questoesAtuais.map((questao) => {
               const estudo = obterEstudo(questao);
+              const isQuestaoParceiro = visualizandoParceiro;
               
               return (
                 <div key={questao.id} className="bg-white rounded-lg shadow-md p-6">
@@ -271,7 +356,9 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
 
                       {questao.comentario && (
                         <div className="mb-3">
-                          <h4 className="font-medium text-gray-900 mb-1">Meu Comentário:</h4>
+                          <h4 className="font-medium text-gray-900 mb-1">
+                            {isQuestaoParceiro ? 'Comentário do Parceiro:' : 'Meu Comentário:'}
+                          </h4>
                           <p className="text-gray-600 text-sm bg-gray-50 p-2 rounded">{questao.comentario}</p>
                         </div>
                       )}
@@ -282,22 +369,65 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
                           <p className="text-blue-700 text-sm bg-blue-50 p-2 rounded border-l-4 border-blue-300">{questao.comentarioParceiro}</p>
                         </div>
                       )}
+
+                      {/* Campo para adicionar comentário */}
+                      {isQuestaoParceiro && (
+                        <div className="mt-4">
+                          {questaoParaComentar === questao.id ? (
+                            <div className="space-y-2">
+                              <textarea
+                                value={comentarioParaQuestao}
+                                onChange={(e) => setComentarioParaQuestao(e.target.value)}
+                                placeholder="Digite seu comentário para esta questão..."
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                rows={2}
+                              />
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => adicionarComentarioParaQuestao(questao.id)}
+                                  className="bg-blue-600 text-white px-3 py-1 rounded text-sm font-medium hover:bg-blue-700"
+                                >
+                                  Adicionar Comentário
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setQuestaoParaComentar(null);
+                                    setComentarioParaQuestao('');
+                                  }}
+                                  className="bg-gray-600 text-white px-3 py-1 rounded text-sm font-medium hover:bg-gray-700"
+                                >
+                                  Cancelar
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setQuestaoParaComentar(questao.id)}
+                              className="bg-blue-600 text-white px-3 py-1 rounded text-sm font-medium hover:bg-blue-700"
+                            >
+                              Adicionar Comentário
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
                     
-                    <div className="flex space-x-2 ml-4">
-                      <button
-                        onClick={() => iniciarEdicao(questao)}
-                        className="bg-yellow-600 text-white px-3 py-1 rounded text-sm font-medium hover:bg-yellow-700"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => handleDeletar(questao.id)}
-                        className="bg-red-600 text-white px-3 py-1 rounded text-sm font-medium hover:bg-red-700"
-                      >
-                        Deletar
-                      </button>
-                    </div>
+                    {!isQuestaoParceiro && (
+                      <div className="flex space-x-2 ml-4">
+                        <button
+                          onClick={() => iniciarEdicao(questao)}
+                          className="bg-yellow-600 text-white px-3 py-1 rounded text-sm font-medium hover:bg-yellow-700"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => handleDeletar(questao.id)}
+                          className="bg-red-600 text-white px-3 py-1 rounded text-sm font-medium hover:bg-red-700"
+                        >
+                          Deletar
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Controles de acerto/erro */}
