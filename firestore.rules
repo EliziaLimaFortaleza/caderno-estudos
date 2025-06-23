@@ -13,26 +13,83 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    // Helper function para validar dados de estudo
+    function validateEstudo(data) {
+      return data.materia is string && 
+             data.materia.size() >= 2 && 
+             data.materia.size() <= 100 &&
+             data.assunto is string && 
+             data.assunto.size() >= 5 && 
+             data.assunto.size() <= 1000 &&
+             data.userId is string &&
+             data.userId == request.auth.uid &&
+             data.createdAt is timestamp;
+    }
+
+    // Helper function para validar dados de questão
+    function validateQuestao(data) {
+      return data.enunciado is string && 
+             data.enunciado.size() >= 10 && 
+             data.enunciado.size() <= 2000 &&
+             data.assunto is string && 
+             data.assunto.size() >= 2 && 
+             data.assunto.size() <= 100 &&
+             data.userId is string &&
+             data.userId == request.auth.uid &&
+             data.acertou is bool &&
+             data.createdAt is timestamp;
+    }
+
+    // Helper function para validar dados de revisão
+    function validateRevisao(data) {
+      return data.estudoId is string &&
+             data.userId is string &&
+             data.userId == request.auth.uid &&
+             data.dataRevisao is timestamp &&
+             data.concluida is bool &&
+             data.createdAt is timestamp;
+    }
+
+    // Helper function para validar dados de usuário
+    function validateUsuario(data) {
+      return data.userId is string &&
+             data.userId == request.auth.uid &&
+             (data.concurso is string || data.concurso == null) &&
+             (data.cargo is string || data.cargo == null) &&
+             (data.email is string || data.email == null) &&
+             (data.meuApelido is string || data.meuApelido == null) &&
+             (data.parceiroEmail is string || data.parceiroEmail == null) &&
+             (data.parceiroId is string || data.parceiroId == null) &&
+             (data.apelidoParceiro is string || data.apelidoParceiro == null) &&
+             data.updatedAt is timestamp;
+    }
+
     // Usuários só podem ler e escrever seus próprios dados de configuração
     match /usuarios/{userId} {
       allow read, update, delete: if isOwner(userId);
-      allow create: if isAuthenticated();
+      allow create: if isAuthenticated() && validateUsuario(request.resource.data);
     }
 
-    // Usuários só podem ler, criar e alterar seus próprios estudos, questões e revisões
+    // Usuários só podem ler, criar e alterar seus próprios estudos
     match /estudos/{estudoId} {
-      allow read, create, update, delete: if isAuthenticated() && isOwner(request.resource.data.userId);
+      allow read, create, update, delete: if isAuthenticated() && 
+        isOwner(request.resource.data.userId) && 
+        validateEstudo(request.resource.data);
     }
     
+    // Questões: apenas o dono pode criar/editar, mas outros usuários autenticados podem ler
     match /questoes/{questaoId} {
-      // Leitura: Permitir se o usuário estiver autenticado (para parceiros verem)
-      // Escrita (create, update, delete): Apenas o dono pode fazer
       allow read: if isAuthenticated();
-      allow create, update, delete: if isAuthenticated() && isOwner(request.resource.data.userId);
+      allow create, update, delete: if isAuthenticated() && 
+        isOwner(request.resource.data.userId) && 
+        validateQuestao(request.resource.data);
     }
 
+    // Revisões: apenas o dono pode acessar
     match /revisoes/{revisaoId} {
-      allow read, create, update, delete: if isAuthenticated() && isOwner(request.resource.data.userId);
+      allow read, create, update, delete: if isAuthenticated() && 
+        isOwner(request.resource.data.userId) && 
+        validateRevisao(request.resource.data);
     }
   }
 } 

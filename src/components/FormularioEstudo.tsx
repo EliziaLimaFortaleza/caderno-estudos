@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { estudoService } from '../services/estudoService';
+import { sanitizeInput } from '../utils/validation';
 
 interface FormularioEstudoProps {
   onEstudoCriado: () => void;
@@ -20,9 +21,34 @@ export function FormularioEstudo({ onEstudoCriado }: FormularioEstudoProps) {
     
     if (!currentUser) return;
 
+    // Sanitizar inputs
+    const sanitizedMateria = sanitizeInput(formData.materia);
+    const sanitizedAssunto = sanitizeInput(formData.assunto);
+
     // Validação básica
-    if (!formData.materia || !formData.assunto) {
+    if (!sanitizedMateria || !sanitizedAssunto) {
       setError('Todos os campos são obrigatórios');
+      return;
+    }
+
+    // Validação de comprimento
+    if (sanitizedMateria.length < 2) {
+      setError('A matéria deve ter pelo menos 2 caracteres');
+      return;
+    }
+
+    if (sanitizedAssunto.length < 5) {
+      setError('O assunto deve ter pelo menos 5 caracteres');
+      return;
+    }
+
+    if (sanitizedMateria.length > 100) {
+      setError('A matéria deve ter no máximo 100 caracteres');
+      return;
+    }
+
+    if (sanitizedAssunto.length > 1000) {
+      setError('O assunto deve ter no máximo 1000 caracteres');
       return;
     }
 
@@ -31,7 +57,8 @@ export function FormularioEstudo({ onEstudoCriado }: FormularioEstudoProps) {
       setError('');
       
       await estudoService.criarEstudo({
-        ...formData,
+        materia: sanitizedMateria,
+        assunto: sanitizedAssunto,
         userId: currentUser.uid
       });
 
@@ -43,7 +70,7 @@ export function FormularioEstudo({ onEstudoCriado }: FormularioEstudoProps) {
 
       onEstudoCriado();
       alert('Estudo criado com sucesso!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao criar estudo:', error);
       setError('Erro ao criar estudo. Tente novamente.');
     } finally {
@@ -67,7 +94,7 @@ export function FormularioEstudo({ onEstudoCriado }: FormularioEstudoProps) {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label htmlFor="materia" className="block text-sm font-medium text-gray-700 mb-2">
-              Matéria *
+              Matéria * (2-100 caracteres)
             </label>
             <input
               type="text"
@@ -78,12 +105,13 @@ export function FormularioEstudo({ onEstudoCriado }: FormularioEstudoProps) {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               placeholder="Ex: Direito Constitucional"
               required
+              maxLength={100}
             />
           </div>
 
           <div>
             <label htmlFor="assunto" className="block text-sm font-medium text-gray-700 mb-2">
-              Assunto *
+              Assunto * (5-1000 caracteres)
             </label>
             <textarea
               id="assunto"
@@ -94,7 +122,11 @@ export function FormularioEstudo({ onEstudoCriado }: FormularioEstudoProps) {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               placeholder="Ex: Princípios fundamentais da Constituição Federal"
               required
+              maxLength={1000}
             />
+            <div className="text-xs text-gray-500 mt-1">
+              {formData.assunto.length}/1000 caracteres
+            </div>
           </div>
 
           {error && (
@@ -103,24 +135,11 @@ export function FormularioEstudo({ onEstudoCriado }: FormularioEstudoProps) {
             </div>
           )}
 
-          <div className="flex justify-end space-x-4">
-            <button
-              type="button"
-              onClick={() => {
-                setFormData({
-                  materia: '',
-                  assunto: ''
-                });
-                setError('');
-              }}
-              className="px-6 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              Limpar
-            </button>
+          <div>
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+              className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Criando...' : 'Criar Estudo'}
             </button>
