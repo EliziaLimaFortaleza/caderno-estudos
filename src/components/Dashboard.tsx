@@ -27,7 +27,9 @@ export function Dashboard() {
     
     try {
       setLoading(true);
+      console.log('Carregando estudos para usuário:', currentUser.uid);
       const estudosData = await estudoService.buscarEstudosPorUsuario(currentUser.uid);
+      console.log('Estudos carregados:', estudosData);
       setEstudos(estudosData);
     } catch (error) {
       console.error('Erro ao carregar estudos:', error);

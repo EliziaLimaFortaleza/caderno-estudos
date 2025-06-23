@@ -16,11 +16,13 @@ import { Estudo } from '../types';
 export const estudoService = {
   async criarEstudo(estudo: Omit<Estudo, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
     try {
+      console.log('Criando estudo:', estudo);
       const docRef = await addDoc(collection(db, 'estudos'), {
         ...estudo,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
+      console.log('Estudo criado com ID:', docRef.id);
       return docRef.id;
     } catch (error: any) {
       console.error('Erro ao criar estudo:', error);
@@ -63,6 +65,7 @@ export const estudoService = {
 
   async buscarEstudosPorUsuario(userId: string): Promise<Estudo[]> {
     try {
+      console.log('Buscando estudos para usuário:', userId);
       const q = query(
         collection(db, 'estudos'),
         where('userId', '==', userId),
@@ -70,10 +73,13 @@ export const estudoService = {
       );
       
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
+      const estudos = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as Estudo[];
+      
+      console.log('Estudos encontrados:', estudos);
+      return estudos;
     } catch (error: any) {
       console.error('Erro ao buscar estudos:', error);
       throw new Error(`Erro ao buscar estudos: ${error.message || 'Erro desconhecido'}`);
