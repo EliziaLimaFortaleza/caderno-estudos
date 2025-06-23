@@ -38,6 +38,7 @@ export function PainelDesempenho({ estudos }: PainelDesempenhoProps) {
       carregarDados();
       carregarConfiguracao();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
 
   async function carregarDados(parceiroId?: string) {
@@ -102,17 +103,6 @@ export function PainelDesempenho({ estudos }: PainelDesempenhoProps) {
     } catch (error) {
       console.error('Erro ao salvar configuração:', error);
       alert('Erro ao salvar configuração');
-    }
-  }
-
-  async function salvarApelidoParceiro() {
-    if (!currentUser || !configuracao.apelidoParceiro.trim()) return;
-    try {
-      await usuarioService.salvarApelidoParceiro(currentUser.uid, configuracao.apelidoParceiro);
-      alert('Apelido salvo com sucesso!');
-    } catch (error) {
-      console.error('Erro ao salvar apelido:', error);
-      alert('Erro ao salvar apelido');
     }
   }
 
@@ -214,7 +204,6 @@ export function PainelDesempenho({ estudos }: PainelDesempenhoProps) {
   }, {} as Record<string, { acertadas: number; erradas: number }>);
 
   const totalQuestoes = questoes.length;
-  const questoesAcertadas = questoes.filter(q => q.acertou === true).length;
 
   if (loading) {
     return (

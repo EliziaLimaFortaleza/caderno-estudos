@@ -15,6 +15,7 @@ export function ListaRevisoes() {
     if (currentUser) {
       carregarDados();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
 
   async function carregarDados() {

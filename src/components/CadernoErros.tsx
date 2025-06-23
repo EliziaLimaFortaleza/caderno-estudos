@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Estudo, Questao } from '../types';
 import { questaoService } from '../services/questaoService';
@@ -35,6 +35,7 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
       carregarQuestoes();
       carregarParceiro();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
 
   useEffect(() => {

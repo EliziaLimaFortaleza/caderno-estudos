@@ -19,6 +19,7 @@ export function Dashboard() {
     if (currentUser) {
       carregarEstudos();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
 
   async function carregarEstudos() {
