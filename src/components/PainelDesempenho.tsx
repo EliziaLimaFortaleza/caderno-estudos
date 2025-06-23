@@ -17,8 +17,13 @@ export function PainelDesempenho({ estudos }: PainelDesempenhoProps) {
   const [editandoConfig, setEditandoConfig] = useState(false);
   const [configuracao, setConfiguracao] = useState({
     concurso: '',
-    cargo: ''
+    cargo: '',
+    parceiroEmail: ''
   });
+  const [parceiro, setParceiro] = useState<any>(null);
+  const [visualizandoParceiro, setVisualizandoParceiro] = useState(false);
+  const [emailParceiroInput, setEmailParceiroInput] = useState('');
+  const [carregandoParceiro, setCarregandoParceiro] = useState(false);
 
   useEffect(() => {
     if (currentUser) {
@@ -27,16 +32,16 @@ export function PainelDesempenho({ estudos }: PainelDesempenhoProps) {
     }
   }, [currentUser]);
 
-  async function carregarDados() {
-    if (!currentUser) return;
-
+  async function carregarDados(parceiroId?: string) {
+    if (!currentUser && !parceiroId) return;
+    const uid = parceiroId || currentUser?.uid;
+    if (!uid) return;
     try {
       setLoading(true);
       const [revisoesData, questoesData] = await Promise.all([
-        revisaoService.buscarRevisoesPorUsuario(currentUser.uid),
-        questaoService.buscarQuestoesPorUsuario(currentUser.uid)
+        revisaoService.buscarRevisoesPorUsuario(uid),
+        questaoService.buscarQuestoesPorUsuario(uid)
       ]);
-      
       setRevisoes(revisoesData);
       setQuestoes(questoesData);
     } catch (error) {
@@ -48,14 +53,17 @@ export function PainelDesempenho({ estudos }: PainelDesempenhoProps) {
 
   async function carregarConfiguracao() {
     if (!currentUser) return;
-
     try {
       const config = await usuarioService.obterConfiguracao(currentUser.uid);
       if (config) {
         setConfiguracao({
           concurso: config.concurso || '',
-          cargo: config.cargo || ''
+          cargo: config.cargo || '',
+          parceiroEmail: config.parceiroEmail || ''
         });
+        if (config.parceiroEmail) {
+          await carregarParceiro(config.parceiroEmail);
+        }
       }
     } catch (error) {
       console.error('Erro ao carregar configuração:', error);
@@ -64,7 +72,6 @@ export function PainelDesempenho({ estudos }: PainelDesempenhoProps) {
 
   async function salvarConfiguracao() {
     if (!currentUser) return;
-
     try {
       await usuarioService.salvarConfiguracao(
         currentUser.uid,
@@ -76,6 +83,56 @@ export function PainelDesempenho({ estudos }: PainelDesempenhoProps) {
     } catch (error) {
       console.error('Erro ao salvar configuração:', error);
       alert('Erro ao salvar configuração');
+    }
+  }
+
+  async function adicionarParceiro() {
+    if (!currentUser || !emailParceiroInput) return;
+    setCarregandoParceiro(true);
+    try {
+      const parceiroData = await usuarioService.buscarUsuarioPorEmail(emailParceiroInput);
+      if (!parceiroData) {
+        alert('Usuário/parceiro não encontrado!');
+        setCarregandoParceiro(false);
+        return;
+      }
+      await usuarioService.salvarParceiro(currentUser.uid, emailParceiroInput);
+      setConfiguracao((prev) => ({ ...prev, parceiroEmail: emailParceiroInput }));
+      setParceiro(parceiroData);
+      setEmailParceiroInput('');
+      alert('Parceiro adicionado!');
+    } catch (error) {
+      alert('Erro ao adicionar parceiro');
+    } finally {
+      setCarregandoParceiro(false);
+    }
+  }
+
+  async function removerParceiro() {
+    if (!currentUser) return;
+    setCarregandoParceiro(true);
+    try {
+      await usuarioService.removerParceiro(currentUser.uid);
+      setConfiguracao((prev) => ({ ...prev, parceiroEmail: '' }));
+      setParceiro(null);
+      setVisualizandoParceiro(false);
+      alert('Parceiro removido!');
+    } catch (error) {
+      alert('Erro ao remover parceiro');
+    } finally {
+      setCarregandoParceiro(false);
+    }
+  }
+
+  async function carregarParceiro(email: string) {
+    setCarregandoParceiro(true);
+    try {
+      const parceiroData = await usuarioService.buscarUsuarioPorEmail(email);
+      setParceiro(parceiroData);
+    } catch (error) {
+      setParceiro(null);
+    } finally {
+      setCarregandoParceiro(false);
     }
   }
 
@@ -116,7 +173,7 @@ export function PainelDesempenho({ estudos }: PainelDesempenhoProps) {
 
   return (
     <div className="space-y-6">
-      {/* Cabeçalho com Concurso e Cargo */}
+      {/* Cabeçalho com Concurso, Cargo e Parceiro */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold text-gray-900">Painel de Desempenho</h2>
@@ -127,7 +184,50 @@ export function PainelDesempenho({ estudos }: PainelDesempenhoProps) {
             {editandoConfig ? 'Cancelar' : 'Editar'}
           </button>
         </div>
-
+        {/* PARCEIRO DE ESTUDOS */}
+        <div className="mb-4">
+          <h4 className="font-semibold text-gray-700 mb-2">Parceiro de estudos</h4>
+          {configuracao.parceiroEmail && parceiro ? (
+            <div className="flex items-center space-x-4">
+              <span className="text-gray-800">{configuracao.parceiroEmail}</span>
+              <button
+                onClick={removerParceiro}
+                className="text-red-600 hover:text-red-800 text-xs font-medium border border-red-200 rounded px-2 py-1"
+                disabled={carregandoParceiro}
+              >
+                Remover
+              </button>
+              <button
+                onClick={() => {
+                  setVisualizandoParceiro((v) => !v);
+                  carregarDados(visualizandoParceiro ? undefined : parceiro.userId);
+                }}
+                className="text-indigo-600 hover:text-indigo-800 text-xs font-medium border border-indigo-200 rounded px-2 py-1"
+              >
+                {visualizandoParceiro ? 'Ver meu desempenho' : 'Ver desempenho do parceiro'}
+              </button>
+            </div>
+          ) : (
+            <div className="flex space-x-2">
+              <input
+                type="email"
+                placeholder="E-mail do parceiro"
+                value={emailParceiroInput}
+                onChange={(e) => setEmailParceiroInput(e.target.value)}
+                className="px-2 py-1 border border-gray-300 rounded"
+                disabled={carregandoParceiro}
+              />
+              <button
+                onClick={adicionarParceiro}
+                className="bg-indigo-600 text-white px-3 py-1 rounded text-xs font-medium hover:bg-indigo-700"
+                disabled={carregandoParceiro}
+              >
+                {carregandoParceiro ? 'Adicionando...' : 'Adicionar'}
+              </button>
+            </div>
+          )}
+        </div>
+        {/* ...restante do cabeçalho concurso/cargo... */}
         {editandoConfig ? (
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
