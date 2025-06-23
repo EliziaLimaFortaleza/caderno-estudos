@@ -9,8 +9,6 @@ interface FormularioEstudoProps {
 export function FormularioEstudo({ onEstudoCriado }: FormularioEstudoProps) {
   const { currentUser } = useAuth();
   const [formData, setFormData] = useState({
-    concurso: '',
-    cargo: '',
     materia: '',
     assunto: ''
   });
@@ -23,7 +21,7 @@ export function FormularioEstudo({ onEstudoCriado }: FormularioEstudoProps) {
     if (!currentUser) return;
 
     // Validação básica
-    if (!formData.concurso || !formData.cargo || !formData.materia || !formData.assunto) {
+    if (!formData.materia || !formData.assunto) {
       setError('Todos os campos são obrigatórios');
       return;
     }
@@ -39,8 +37,6 @@ export function FormularioEstudo({ onEstudoCriado }: FormularioEstudoProps) {
 
       // Limpar formulário
       setFormData({
-        concurso: '',
-        cargo: '',
         materia: '',
         assunto: ''
       });
@@ -69,38 +65,6 @@ export function FormularioEstudo({ onEstudoCriado }: FormularioEstudoProps) {
         <h2 className="text-2xl font-bold text-gray-900 mb-6">Novo Estudo</h2>
         
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label htmlFor="concurso" className="block text-sm font-medium text-gray-700 mb-2">
-              Concurso *
-            </label>
-            <input
-              type="text"
-              id="concurso"
-              name="concurso"
-              value={formData.concurso}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              placeholder="Ex: Concurso da Polícia Federal"
-              required
-            />
-          </div>
-
-          <div>
-            <label htmlFor="cargo" className="block text-sm font-medium text-gray-700 mb-2">
-              Cargo *
-            </label>
-            <input
-              type="text"
-              id="cargo"
-              name="cargo"
-              value={formData.cargo}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              placeholder="Ex: Delegado de Polícia Federal"
-              required
-            />
-          </div>
-
           <div>
             <label htmlFor="materia" className="block text-sm font-medium text-gray-700 mb-2">
               Matéria *
@@ -144,8 +108,6 @@ export function FormularioEstudo({ onEstudoCriado }: FormularioEstudoProps) {
               type="button"
               onClick={() => {
                 setFormData({
-                  concurso: '',
-                  cargo: '',
                   materia: '',
                   assunto: ''
                 });

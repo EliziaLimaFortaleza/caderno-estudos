@@ -1,7 +1,7 @@
 export interface Estudo {
   id: string;
-  concurso: string;
-  cargo: string;
+  concurso?: string;
+  cargo?: string;
   materia: string;
   assunto: string;
   userId: string;
