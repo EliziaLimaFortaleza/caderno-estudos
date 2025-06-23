@@ -15,6 +15,7 @@ interface ConfiguracaoUsuario {
   concurso: string;
   cargo: string;
   userId: string;
+  email?: string;
   parceiroEmail?: string;
   parceiroId?: string;
   updatedAt: any;
@@ -36,26 +37,40 @@ export const usuarioService = {
     }
   },
 
-  async salvarConfiguracao(userId: string, concurso: string, cargo: string): Promise<void> {
+  async salvarConfiguracao(userId: string, concurso: string, cargo: string, email?: string): Promise<void> {
     try {
       const docRef = doc(db, 'usuarios', userId);
       const docSnap = await getDoc(docRef);
       
       if (docSnap.exists()) {
         // Atualizar configuração existente
-        await updateDoc(docRef, {
+        const updateData: any = {
           concurso,
           cargo,
           updatedAt: serverTimestamp()
-        });
+        };
+        
+        // Adicionar email se fornecido
+        if (email) {
+          updateData.email = email;
+        }
+        
+        await updateDoc(docRef, updateData);
       } else {
         // Criar nova configuração
-        await setDoc(docRef, {
+        const newData: any = {
           concurso,
           cargo,
           userId,
           updatedAt: serverTimestamp()
-        });
+        };
+        
+        // Adicionar email se fornecido
+        if (email) {
+          newData.email = email;
+        }
+        
+        await setDoc(docRef, newData);
       }
     } catch (error: any) {
       console.error('Erro ao salvar configuração:', error);
@@ -92,13 +107,33 @@ export const usuarioService = {
 
   async buscarUsuarioPorEmail(email: string): Promise<ConfiguracaoUsuario | null> {
     try {
+      // Primeiro, tentar buscar na coleção usuarios
       const usuariosRef = collection(db, 'usuarios');
       const q = query(usuariosRef, where('email', '==', email));
       const querySnapshot = await getDocs(q);
+      
       if (!querySnapshot.empty) {
-        return querySnapshot.docs[0].data() as ConfiguracaoUsuario;
+        const userData = querySnapshot.docs[0].data() as ConfiguracaoUsuario;
+        return {
+          ...userData,
+          userId: querySnapshot.docs[0].id
+        };
       }
-      return null;
+
+      // Se não encontrou na coleção usuarios, criar um documento básico
+      // Isso permite que usuários que ainda não têm configuração sejam adicionados como parceiros
+      const novoUserId = `parceiro_${Date.now()}`;
+      const novoUsuario: ConfiguracaoUsuario = {
+        userId: novoUserId,
+        email: email,
+        concurso: '',
+        cargo: '',
+        updatedAt: serverTimestamp()
+      };
+
+      await setDoc(doc(db, 'usuarios', novoUserId), novoUsuario);
+      
+      return novoUsuario;
     } catch (error: any) {
       console.error('Erro ao buscar usuário por e-mail:', error);
       throw new Error(`Erro ao buscar usuário: ${error.message || 'Erro desconhecido'}`);

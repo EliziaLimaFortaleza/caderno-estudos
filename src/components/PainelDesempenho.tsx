@@ -76,7 +76,8 @@ export function PainelDesempenho({ estudos }: PainelDesempenhoProps) {
       await usuarioService.salvarConfiguracao(
         currentUser.uid,
         configuracao.concurso,
-        configuracao.cargo
+        configuracao.cargo,
+        currentUser.email || undefined
       );
       setEditandoConfig(false);
       alert('Configuração salva com sucesso!');
