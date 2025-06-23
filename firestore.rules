@@ -64,10 +64,29 @@ service cloud.firestore {
              data.updatedAt is timestamp;
     }
 
-    // Usuários só podem ler e escrever seus próprios dados de configuração
+    // Helper function para validar dados de usuário para update
+    function validateUsuarioUpdate(data) {
+      return (data.concurso is string || data.concurso == null) &&
+             (data.cargo is string || data.cargo == null) &&
+             (data.email is string || data.email == null) &&
+             (data.meuApelido is string || data.meuApelido == null) &&
+             (data.parceiroEmail is string || data.parceiroEmail == null) &&
+             (data.parceiroId is string || data.parceiroId == null) &&
+             (data.apelidoParceiro is string || data.apelidoParceiro == null) &&
+             data.updatedAt is timestamp;
+    }
+
+    // Usuários podem ler dados de outros usuários (para busca de parceiros)
+    // mas só podem atualizar seus próprios dados
     match /usuarios/{userId} {
-      allow read, update, delete: if isOwner(userId);
+      // Permitir leitura para busca de parceiros
+      allow read: if isAuthenticated();
+      // Permitir atualização apenas do próprio usuário
+      allow update: if isOwner(userId) && validateUsuarioUpdate(request.resource.data);
+      // Permitir criação apenas do próprio usuário
       allow create: if isAuthenticated() && validateUsuario(request.resource.data);
+      // Permitir exclusão apenas do próprio usuário
+      allow delete: if isOwner(userId);
     }
 
     // Usuários só podem ler, criar e alterar seus próprios estudos
