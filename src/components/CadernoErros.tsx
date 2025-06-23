@@ -3,6 +3,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { Estudo, Questao } from '../types';
 import { questaoService } from '../services/questaoService';
 import { usuarioService } from '../services/usuarioService';
+import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../firebase';
 
 interface CadernoErrosProps {
   estudos: Estudo[];
@@ -25,6 +27,8 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
   const [visualizandoParceiro, setVisualizandoParceiro] = useState(false);
   const [comentarioParaQuestao, setComentarioParaQuestao] = useState('');
   const [questaoParaComentar, setQuestaoParaComentar] = useState<string | null>(null);
+  const [novoComentario, setNovoComentario] = useState('');
+  const [meuApelido, setMeuApelido] = useState('');
   const [apelidoParceiro, setApelidoParceiro] = useState('');
 
   useEffect(() => {
@@ -33,6 +37,13 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
       carregarParceiro();
     }
   }, [currentUser]);
+
+  useEffect(() => {
+    if (currentUser && parceiro) {
+      setMeuApelido(parceiro.apelido || '');
+      setApelidoParceiro(parceiro.apelido || '');
+    }
+  }, [currentUser, parceiro]);
 
   async function carregarQuestoes() {
     if (!currentUser) return;
@@ -138,25 +149,48 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
     }
   }
 
-  async function adicionarComentarioParaQuestao(questaoId: string) {
-    if (!comentarioParaQuestao.trim() || !currentUser) {
-      alert('Digite um comentário');
-      return;
-    }
+  const adicionarComentario = async (questaoId: string) => {
+    if (!comentarioParaQuestao.trim() || !currentUser) return;
 
     try {
-      const autor = visualizandoParceiro ? (apelidoParceiro || 'Parceiro') : 'Você';
-      await questaoService.adicionarComentarioParaQuestao(questaoId, comentarioParaQuestao, currentUser.uid, autor);
+      const questaoRef = doc(db, 'questoes', questaoId);
+      const questaoDoc = await getDoc(questaoRef);
+      
+      if (!questaoDoc.exists()) {
+        alert('Questão não encontrada');
+        return;
+      }
+
+      const questaoData = questaoDoc.data();
+      const comentariosExistentes = questaoData.comentarios || [];
+      
+      // Criar novo comentário com identificação do autor
+      const novoComentarioObj = {
+        id: Date.now().toString(), // ID único para o comentário
+        autor: currentUser.email,
+        apelido: meuApelido || currentUser.email?.split('@')[0] || 'Usuário',
+        texto: comentarioParaQuestao,
+        data: new Date().toISOString(),
+        timestamp: serverTimestamp()
+      };
+
+      // Adicionar o novo comentário à lista existente
+      const comentariosAtualizados = [...comentariosExistentes, novoComentarioObj];
+
+      await updateDoc(questaoRef, {
+        comentarios: comentariosAtualizados
+      });
+
       setComentarioParaQuestao('');
       setQuestaoParaComentar(null);
       await carregarQuestoes();
       await carregarParceiro(); // Recarregar questões do parceiro
       alert('Comentário adicionado com sucesso!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao adicionar comentário:', error);
-      alert('Erro ao adicionar comentário');
+      alert(`Erro ao adicionar comentário: ${error.message}`);
     }
-  }
+  };
 
   function iniciarEdicao(questao: Questao) {
     setEditandoId(questao.id);
@@ -358,29 +392,44 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
                       )}
 
                       {/* Sistema de Fórum - Comentários */}
-                      {questao.comentarios && Object.keys(questao.comentarios).length > 0 && (
-                        <div className="mb-4">
-                          <h4 className="font-medium text-gray-900 mb-3 flex items-center">
-                            <span className="mr-2">💬</span>
-                            Comentários ({Object.keys(questao.comentarios).length})
-                          </h4>
-                          <div className="space-y-3">
-                            {Object.entries(questao.comentarios).map(([userId, comentario]) => (
-                              <div key={userId} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                <div className="flex items-center justify-between mb-2">
-                                  <span className="text-sm font-medium text-blue-600">
-                                    {comentario.autor}
+                      {questao.comentarios && (
+                        <div className="mt-4 space-y-2">
+                          <h4 className="font-semibold text-gray-700">Comentários:</h4>
+                          {Array.isArray(questao.comentarios) ? (
+                            // Nova estrutura: array de comentários
+                            questao.comentarios.map((comentario: any, index: number) => (
+                              <div key={comentario.id || index} className="bg-gray-50 p-3 rounded-lg">
+                                <div className="flex justify-between items-start mb-2">
+                                  <span className="font-medium text-blue-600">
+                                    {comentario.apelido || comentario.autor || 'Usuário'}
+                                  </span>
+                                  <span className="text-xs text-gray-500">
+                                    {comentario.data ? new Date(comentario.data).toLocaleDateString('pt-BR') : 'Data não disponível'}
+                                  </span>
+                                </div>
+                                <p className="text-gray-700">{comentario.texto}</p>
+                              </div>
+                            ))
+                          ) : (
+                            // Estrutura antiga: objeto com userId como chave
+                            Object.entries(questao.comentarios).map(([userId, comentario]: [string, any]) => (
+                              <div key={userId} className="bg-gray-50 p-3 rounded-lg">
+                                <div className="flex justify-between items-start mb-2">
+                                  <span className="font-medium text-blue-600">
+                                    {comentario.autor || 'Usuário'}
                                   </span>
                                   <span className="text-xs text-gray-500">
                                     {comentario.data instanceof Date 
-                                      ? comentario.data.toLocaleDateString() 
-                                      : new Date(comentario.data?.seconds * 1000).toLocaleDateString()}
+                                      ? comentario.data.toLocaleDateString('pt-BR')
+                                      : comentario.data?.seconds 
+                                        ? new Date(comentario.data.seconds * 1000).toLocaleDateString('pt-BR')
+                                        : 'Data não disponível'}
                                   </span>
                                 </div>
-                                <p className="text-sm text-gray-700 leading-relaxed">{comentario.texto}</p>
+                                <p className="text-gray-700">{comentario.texto}</p>
                               </div>
-                            ))}
-                          </div>
+                            ))
+                          )}
                         </div>
                       )}
 
@@ -398,7 +447,7 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
                             />
                             <div className="flex space-x-2">
                               <button
-                                onClick={() => adicionarComentarioParaQuestao(questao.id)}
+                                onClick={() => adicionarComentario(questao.id)}
                                 className="bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700"
                               >
                                 Comentar

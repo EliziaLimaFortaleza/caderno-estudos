@@ -106,6 +106,19 @@ export const usuarioService = {
     }
   },
 
+  async salvarMeuApelido(userId: string, apelido: string): Promise<void> {
+    try {
+      const docRef = doc(db, 'usuarios', userId);
+      await updateDoc(docRef, {
+        meuApelido: apelido,
+        updatedAt: serverTimestamp()
+      });
+    } catch (error: any) {
+      console.error('Erro ao salvar meu apelido:', error);
+      throw new Error(`Erro ao salvar apelido: ${error.message || 'Erro desconhecido'}`);
+    }
+  },
+
   async removerParceiro(userId: string): Promise<void> {
     try {
       const docRef = doc(db, 'usuarios', userId);

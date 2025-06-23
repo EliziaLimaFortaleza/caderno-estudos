@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Estudo, Revisao, Questao } from '../types';
+import { Estudo, Revisao, Questao, ConfiguracaoUsuario } from '../types';
 import { revisaoService } from '../services/revisaoService';
 import { questaoService } from '../services/questaoService';
 import { usuarioService } from '../services/usuarioService';
@@ -15,11 +15,18 @@ export function PainelDesempenho({ estudos }: PainelDesempenhoProps) {
   const [questoes, setQuestoes] = useState<Questao[]>([]);
   const [loading, setLoading] = useState(true);
   const [editandoConfig, setEditandoConfig] = useState(false);
-  const [configuracao, setConfiguracao] = useState({
+  const [configuracao, setConfiguracao] = useState<{
+    concurso: string;
+    cargo: string;
+    parceiroEmail: string;
+    apelidoParceiro: string;
+    meuApelido: string;
+  }>({
     concurso: '',
     cargo: '',
     parceiroEmail: '',
-    apelidoParceiro: ''
+    apelidoParceiro: '',
+    meuApelido: ''
   });
   const [parceiro, setParceiro] = useState<any>(null);
   const [visualizandoParceiro, setVisualizandoParceiro] = useState(false);
@@ -63,13 +70,14 @@ export function PainelDesempenho({ estudos }: PainelDesempenhoProps) {
   async function carregarConfiguracao() {
     if (!currentUser) return;
     try {
-      const config = await usuarioService.obterConfiguracao(currentUser.uid);
+      const config = await usuarioService.obterConfiguracao(currentUser.uid) as any;
       if (config) {
         setConfiguracao({
           concurso: config.concurso || '',
           cargo: config.cargo || '',
           parceiroEmail: config.parceiroEmail || '',
-          apelidoParceiro: config.apelidoParceiro || ''
+          apelidoParceiro: config.apelidoParceiro || '',
+          meuApelido: config.meuApelido || ''
         });
         if (config.parceiroEmail) {
           await carregarParceiro(config.parceiroEmail);
@@ -105,6 +113,17 @@ export function PainelDesempenho({ estudos }: PainelDesempenhoProps) {
     } catch (error) {
       console.error('Erro ao salvar apelido:', error);
       alert('Erro ao salvar apelido');
+    }
+  }
+
+  async function salvarMeuApelido() {
+    if (!currentUser || !configuracao.meuApelido.trim()) return;
+    try {
+      await usuarioService.salvarMeuApelido(currentUser.uid, configuracao.meuApelido);
+      alert('Seu apelido salvo com sucesso!');
+    } catch (error) {
+      console.error('Erro ao salvar seu apelido:', error);
+      alert('Erro ao salvar seu apelido');
     }
   }
 
@@ -214,12 +233,31 @@ export function PainelDesempenho({ estudos }: PainelDesempenhoProps) {
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold text-gray-900">Painel de Desempenho</h2>
-          <button
-            onClick={() => setEditandoConfig(!editandoConfig)}
-            className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
-          >
-            {editandoConfig ? 'Cancelar' : 'Editar'}
-          </button>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <label className="text-sm font-medium text-gray-700">Meu Apelido:</label>
+              <input
+                type="text"
+                value={configuracao.meuApelido}
+                onChange={(e) => setConfiguracao({...configuracao, meuApelido: e.target.value})}
+                className="px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                placeholder="Ex: João"
+                style={{ width: 100 }}
+              />
+              <button
+                onClick={salvarMeuApelido}
+                className="bg-green-600 text-white px-2 py-1 rounded text-xs font-medium hover:bg-green-700"
+              >
+                Salvar
+              </button>
+            </div>
+            <button
+              onClick={() => setEditandoConfig(!editandoConfig)}
+              className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
+            >
+              {editandoConfig ? 'Cancelar' : 'Editar'}
+            </button>
+          </div>
         </div>
         {/* PARCEIRO DE ESTUDOS */}
         <div className="mb-4">
@@ -347,6 +385,28 @@ export function PainelDesempenho({ estudos }: PainelDesempenhoProps) {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   placeholder="Ex: Agente de Tecnologia"
                 />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Meu Apelido
+                </label>
+                <input
+                  type="text"
+                  value={configuracao.meuApelido}
+                  onChange={(e) => setConfiguracao({...configuracao, meuApelido: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="Ex: João"
+                />
+              </div>
+              <div className="flex items-end">
+                <button
+                  onClick={salvarMeuApelido}
+                  className="bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-700"
+                >
+                  Salvar Apelido
+                </button>
               </div>
             </div>
             <div className="flex space-x-2">

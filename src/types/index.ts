@@ -60,4 +60,16 @@ export interface Desempenho {
       erradas: number;
     };
   };
+}
+
+export interface ConfiguracaoUsuario {
+  concurso: string;
+  cargo: string;
+  userId: string;
+  email?: string;
+  parceiroEmail?: string;
+  parceiroId?: string;
+  apelidoParceiro?: string;
+  meuApelido?: string;
+  updatedAt: any;
 } 
