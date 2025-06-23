@@ -7,9 +7,10 @@ import { usuarioService } from '../services/usuarioService';
 
 interface PainelDesempenhoProps {
   estudos: Estudo[];
+  onApelidoAtualizado?: (apelido: string) => void;
 }
 
-export function PainelDesempenho({ estudos }: PainelDesempenhoProps) {
+export function PainelDesempenho({ estudos, onApelidoAtualizado }: PainelDesempenhoProps) {
   const { currentUser } = useAuth();
   const [revisoes, setRevisoes] = useState<Revisao[]>([]);
   const [questoes, setQuestoes] = useState<Questao[]>([]);
@@ -111,6 +112,9 @@ export function PainelDesempenho({ estudos }: PainelDesempenhoProps) {
     try {
       await usuarioService.salvarMeuApelido(currentUser.uid, configuracao.meuApelido);
       alert('Seu apelido salvo com sucesso!');
+      if (onApelidoAtualizado) {
+        onApelidoAtualizado(configuracao.meuApelido);
+      }
     } catch (error) {
       console.error('Erro ao salvar seu apelido:', error);
       alert('Erro ao salvar seu apelido');
@@ -238,11 +242,17 @@ export function PainelDesempenho({ estudos }: PainelDesempenhoProps) {
                       {configuracao.apelidoParceiro || 'Sem apelido'}
                     </span>
                     <button
-                      onClick={() => {
+                      onClick={async () => {
                         const novoApelido = prompt('Digite o apelido do seu parceiro:', configuracao.apelidoParceiro);
                         if (novoApelido !== null) {
                           setConfiguracao(prev => ({ ...prev, apelidoParceiro: novoApelido }));
-                          usuarioService.salvarApelidoParceiro(currentUser!.uid, novoApelido);
+                          try {
+                            await usuarioService.salvarApelidoParceiro(currentUser!.uid, novoApelido);
+                            alert('Apelido do parceiro salvo com sucesso!');
+                          } catch (error) {
+                            console.error('Erro ao salvar apelido do parceiro:', error);
+                            alert('Erro ao salvar apelido do parceiro');
+                          }
                         }
                       }}
                       className="text-blue-600 hover:text-blue-800 text-xs font-medium p-1 rounded hover:bg-blue-50"

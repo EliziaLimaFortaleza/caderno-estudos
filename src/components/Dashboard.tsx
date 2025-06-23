@@ -55,6 +55,10 @@ export function Dashboard() {
     }
   }
 
+  function atualizarApelido(apelido: string) {
+    setConfiguracao(prev => ({ ...prev, meuApelido: apelido }));
+  }
+
   async function handleLogout() {
     try {
       await logout();
@@ -128,7 +132,7 @@ export function Dashboard() {
           ) : (
             <>
               {activeTab === 'desempenho' && (
-                <PainelDesempenho estudos={estudos} />
+                <PainelDesempenho estudos={estudos} onApelidoAtualizado={atualizarApelido} />
               )}
               {activeTab === 'estudos' && (
                 <ListaEstudos 

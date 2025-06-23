@@ -170,8 +170,7 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
         autor: currentUser.email,
         apelido: meuApelido || currentUser.email?.split('@')[0] || 'Usuário',
         texto: comentarioParaQuestao,
-        data: new Date().toISOString(),
-        timestamp: serverTimestamp()
+        data: new Date().toISOString()
       };
 
       // Adicionar o novo comentário à lista existente
