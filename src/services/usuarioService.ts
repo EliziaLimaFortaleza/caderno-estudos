@@ -20,6 +20,7 @@ interface ConfiguracaoUsuario {
   parceiroEmail?: string;
   parceiroId?: string;
   apelidoParceiro?: string;
+  meuApelido?: string;
   updatedAt: any;
 }
 

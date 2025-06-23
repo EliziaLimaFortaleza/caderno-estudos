@@ -39,11 +39,25 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
   }, [currentUser]);
 
   useEffect(() => {
-    if (currentUser && parceiro) {
-      setMeuApelido(parceiro.apelido || '');
-      setApelidoParceiro(parceiro.apelido || '');
-    }
-  }, [currentUser, parceiro]);
+    if (!currentUser) return;
+    (async () => {
+      // Buscar config do usuário logado
+      const minhaConfig = await usuarioService.obterConfiguracao(currentUser.uid);
+      if (minhaConfig?.meuApelido) setMeuApelido(minhaConfig.meuApelido);
+      // Buscar config do parceiro, se houver
+      if (minhaConfig?.parceiroEmail) {
+        const parceiroConfig = await usuarioService.buscarUsuarioPorEmail(minhaConfig.parceiroEmail);
+        if (parceiroConfig?.meuApelido) setApelidoParceiro(parceiroConfig.meuApelido);
+        setParceiro(parceiroConfig);
+        // Carregar questões do parceiro
+        if (parceiroConfig) {
+          const questoesParceiroData = await questaoService.buscarQuestoesPorUsuario(parceiroConfig.userId);
+          setQuestoesParceiro(questoesParceiroData);
+        }
+      }
+      await carregarQuestoes();
+    })();
+  }, [currentUser]);
 
   async function carregarQuestoes() {
     if (!currentUser) return;
@@ -66,6 +80,12 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
       console.log('Carregando parceiro para usuário:', currentUser.uid);
       const config = await usuarioService.obterConfiguracao(currentUser.uid);
       console.log('Configuração carregada:', config);
+      
+      // Carregar o próprio apelido do usuário
+      if (config?.meuApelido) {
+        setMeuApelido(config.meuApelido);
+        console.log('Meu apelido carregado:', config.meuApelido);
+      }
       
       if (config?.parceiroEmail) {
         console.log('Email do parceiro encontrado:', config.parceiroEmail);
@@ -151,39 +171,39 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
 
   const adicionarComentario = async (questaoId: string) => {
     if (!comentarioParaQuestao.trim() || !currentUser) return;
-
     try {
+      // Buscar config do autor do comentário
+      let apelidoAutor = '';
+      const minhaConfig = await usuarioService.obterConfiguracao(currentUser.uid);
+      if (minhaConfig?.meuApelido) {
+        apelidoAutor = minhaConfig.meuApelido;
+      } else {
+        apelidoAutor = currentUser.email?.split('@')[0] || 'Usuário';
+      }
       const questaoRef = doc(db, 'questoes', questaoId);
       const questaoDoc = await getDoc(questaoRef);
-      
       if (!questaoDoc.exists()) {
         alert('Questão não encontrada');
         return;
       }
-
       const questaoData = questaoDoc.data();
       const comentariosExistentes = questaoData.comentarios || [];
-      
-      // Criar novo comentário com identificação do autor
       const novoComentarioObj = {
-        id: Date.now().toString(), // ID único para o comentário
+        id: Date.now().toString(),
         autor: currentUser.email,
-        apelido: meuApelido || currentUser.email?.split('@')[0] || 'Usuário',
+        apelido: apelidoAutor,
         texto: comentarioParaQuestao,
         data: new Date().toISOString()
       };
-
-      // Adicionar o novo comentário à lista existente
       const comentariosAtualizados = [...comentariosExistentes, novoComentarioObj];
-
-      await updateDoc(questaoRef, {
-        comentarios: comentariosAtualizados
-      });
-
+      await updateDoc(questaoRef, { comentarios: comentariosAtualizados });
       setComentarioParaQuestao('');
       setQuestaoParaComentar(null);
       await carregarQuestoes();
-      await carregarParceiro(); // Recarregar questões do parceiro
+      if (parceiro) {
+        const questoesParceiroData = await questaoService.buscarQuestoesPorUsuario(parceiro.userId);
+        setQuestoesParceiro(questoesParceiroData);
+      }
       alert('Comentário adicionado com sucesso!');
     } catch (error: any) {
       console.error('Erro ao adicionar comentário:', error);
