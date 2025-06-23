@@ -6,7 +6,7 @@ import { usuarioService } from '../services/usuarioService';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 
-// Versão atualizada - correção de apelidos nos comentários e botões
+// Versão atualizada - correção de apelidos nos comentários e botões - v2.0
 
 interface CadernoErrosProps {
   estudos: Estudo[];
