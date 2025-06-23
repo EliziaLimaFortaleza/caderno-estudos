@@ -114,16 +114,25 @@ export function PainelDesempenho({ estudos }: PainelDesempenhoProps) {
     try {
       const parceiroData = await usuarioService.buscarUsuarioPorEmail(emailParceiroInput);
       if (!parceiroData) {
-        alert('Usuário/parceiro não encontrado!');
+        alert(`Usuário com email ${emailParceiroInput} não encontrado!\n\nPara adicionar um parceiro, ele precisa:\n1. Ter uma conta no sistema\n2. Ter feito login pelo menos uma vez\n3. Ter salvo suas configurações (concurso/cargo)\n\nPeça para seu parceiro fazer login e salvar suas configurações primeiro.`);
         setCarregandoParceiro(false);
         return;
       }
+      
+      // Verificar se o parceiro tem configurações básicas
+      if (!parceiroData.concurso || !parceiroData.cargo) {
+        alert(`Parceiro encontrado, mas ele ainda não configurou seu concurso e cargo.\n\nPeça para ${emailParceiroInput} fazer login e configurar suas informações primeiro.`);
+        setCarregandoParceiro(false);
+        return;
+      }
+      
       await usuarioService.salvarParceiro(currentUser.uid, emailParceiroInput);
       setConfiguracao((prev) => ({ ...prev, parceiroEmail: emailParceiroInput }));
       setParceiro(parceiroData);
       setEmailParceiroInput('');
-      alert('Parceiro adicionado!');
+      alert('Parceiro adicionado com sucesso!');
     } catch (error) {
+      console.error('Erro ao adicionar parceiro:', error);
       alert('Erro ao adicionar parceiro');
     } finally {
       setCarregandoParceiro(false);

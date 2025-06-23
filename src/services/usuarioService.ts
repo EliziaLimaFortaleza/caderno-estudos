@@ -141,25 +141,46 @@ export const usuarioService = {
         return result;
       }
 
-      console.log('Usuário não encontrado, criando documento básico...');
+      console.log('Usuário não encontrado na coleção usuarios');
       
-      // Se não encontrou na coleção usuarios, criar um documento básico
-      // Isso permite que usuários que ainda não têm configuração sejam adicionados como parceiros
-      const novoUserId = `parceiro_${Date.now()}`;
-      const novoUsuario: ConfiguracaoUsuario = {
-        userId: novoUserId,
-        email: email,
-        concurso: '',
-        cargo: '',
-        updatedAt: serverTimestamp()
-      };
-
-      await setDoc(doc(db, 'usuarios', novoUserId), novoUsuario);
-      console.log('Novo usuário criado:', novoUsuario);
-      
-      return novoUsuario;
+      // Se não encontrou, retornar null em vez de criar um usuário artificial
+      // O parceiro precisa ter uma conta real no sistema
+      return null;
     } catch (error: any) {
       console.error('Erro ao buscar usuário por e-mail:', error);
+      throw new Error(`Erro ao buscar usuário: ${error.message || 'Erro desconhecido'}`);
+    }
+  },
+
+  async buscarUsuarioPorEmailCompleto(email: string): Promise<ConfiguracaoUsuario | null> {
+    try {
+      console.log('Buscando usuário por email (busca completa):', email);
+      
+      // Primeiro, tentar buscar na coleção usuarios
+      const usuariosRef = collection(db, 'usuarios');
+      const q = query(usuariosRef, where('email', '==', email));
+      const querySnapshot = await getDocs(q);
+      
+      if (!querySnapshot.empty) {
+        const userData = querySnapshot.docs[0].data() as ConfiguracaoUsuario;
+        const result = {
+          ...userData,
+          userId: querySnapshot.docs[0].id
+        };
+        console.log('Usuário encontrado na coleção usuarios:', result);
+        return result;
+      }
+
+      // Se não encontrou na coleção usuarios, tentar buscar por outros meios
+      // Por exemplo, se o usuário tem uma conta mas não salvou configuração ainda
+      console.log('Tentando buscar usuário por outros meios...');
+      
+      // Aqui você pode adicionar outras lógicas de busca se necessário
+      // Por exemplo, buscar em outras coleções ou usar APIs do Firebase Auth
+      
+      return null;
+    } catch (error: any) {
+      console.error('Erro ao buscar usuário por e-mail (busca completa):', error);
       throw new Error(`Erro ao buscar usuário: ${error.message || 'Erro desconhecido'}`);
     }
   },
