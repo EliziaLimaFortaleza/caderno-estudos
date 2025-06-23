@@ -27,7 +27,6 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
   const [visualizandoParceiro, setVisualizandoParceiro] = useState(false);
   const [comentarioParaQuestao, setComentarioParaQuestao] = useState('');
   const [questaoParaComentar, setQuestaoParaComentar] = useState<string | null>(null);
-  const [novoComentario, setNovoComentario] = useState('');
   const [meuApelido, setMeuApelido] = useState('');
   const [apelidoParceiro, setApelidoParceiro] = useState('');
 

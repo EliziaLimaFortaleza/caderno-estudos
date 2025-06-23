@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Estudo, Revisao, Questao, ConfiguracaoUsuario } from '../types';
+import { Estudo, Revisao, Questao } from '../types';
 import { revisaoService } from '../services/revisaoService';
 import { questaoService } from '../services/questaoService';
 import { usuarioService } from '../services/usuarioService';
@@ -194,7 +194,6 @@ export function PainelDesempenho({ estudos }: PainelDesempenhoProps) {
 
   // Calcular estatísticas
   const totalAssuntos = estudos.length;
-  const totalRevisoes = revisoes.length;
   const revisoesConcluidas = revisoes.filter(r => r.status === 'concluida').length;
   const revisoesPendentes = revisoes.filter(r => r.status === 'pendente').length;
 
@@ -216,8 +215,6 @@ export function PainelDesempenho({ estudos }: PainelDesempenhoProps) {
 
   const totalQuestoes = questoes.length;
   const questoesAcertadas = questoes.filter(q => q.acertou === true).length;
-  const questoesErradas = questoes.filter(q => q.acertou === false).length;
-  const taxaAcerto = totalQuestoes > 0 ? ((questoesAcertadas / totalQuestoes) * 100).toFixed(1) : '0';
 
   if (loading) {
     return (

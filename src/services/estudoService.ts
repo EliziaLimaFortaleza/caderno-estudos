@@ -1,13 +1,12 @@
 import { 
   collection, 
   addDoc, 
+  getDocs, 
+  doc, 
   updateDoc, 
   deleteDoc, 
-  doc, 
-  getDocs, 
   query, 
   where, 
-  orderBy,
   serverTimestamp 
 } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -102,7 +101,6 @@ export const estudoService = {
 
   async buscarEstudoPorId(id: string): Promise<Estudo | null> {
     try {
-      const docRef = doc(db, 'estudos', id);
       const docSnap = await getDocs(collection(db, 'estudos'));
       
       const estudo = docSnap.docs.find(doc => doc.id === id);
