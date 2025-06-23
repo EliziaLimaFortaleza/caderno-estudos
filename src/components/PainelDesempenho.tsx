@@ -112,6 +112,9 @@ export function PainelDesempenho({ estudos }: PainelDesempenhoProps) {
     if (!currentUser || !emailParceiroInput) return;
     setCarregandoParceiro(true);
     try {
+      // Primeiro, limpar usuários artificiais
+      await usuarioService.limparUsuariosArtificiais();
+      
       const parceiroData = await usuarioService.buscarUsuarioPorEmail(emailParceiroInput);
       if (!parceiroData) {
         alert(`Usuário com email ${emailParceiroInput} não encontrado!\n\nPara adicionar um parceiro, ele precisa:\n1. Ter uma conta no sistema\n2. Ter feito login pelo menos uma vez\n3. Ter salvo suas configurações (concurso/cargo)\n\nPeça para seu parceiro fazer login e salvar suas configurações primeiro.`);
@@ -299,6 +302,20 @@ export function PainelDesempenho({ estudos }: PainelDesempenhoProps) {
                 disabled={carregandoParceiro}
               >
                 {carregandoParceiro ? 'Adicionando...' : 'Adicionar'}
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    await usuarioService.limparUsuariosArtificiais();
+                    alert('Usuários artificiais removidos! Tente adicionar o parceiro novamente.');
+                  } catch (error) {
+                    alert('Erro ao limpar usuários artificiais');
+                  }
+                }}
+                className="bg-yellow-600 text-white px-3 py-1 rounded text-xs font-medium hover:bg-yellow-700"
+                title="Limpar usuários artificiais"
+              >
+                🔧 Limpar
               </button>
             </div>
           )}

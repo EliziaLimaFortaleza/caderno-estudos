@@ -7,7 +7,8 @@ import {
   collection,
   query,
   where,
-  getDocs
+  getDocs,
+  deleteDoc
 } from 'firebase/firestore';
 import { db } from '../firebase';
 
@@ -137,6 +138,14 @@ export const usuarioService = {
           ...userData,
           userId: querySnapshot.docs[0].id
         };
+        
+        // Verificar se é um usuário artificial (criado automaticamente)
+        if (result.userId.startsWith('parceiro_')) {
+          console.log('Usuário artificial encontrado, removendo...');
+          await this.removerUsuarioArtificial(result.userId);
+          return null;
+        }
+        
         console.log('Usuário encontrado:', result);
         return result;
       }
@@ -149,6 +158,17 @@ export const usuarioService = {
     } catch (error: any) {
       console.error('Erro ao buscar usuário por e-mail:', error);
       throw new Error(`Erro ao buscar usuário: ${error.message || 'Erro desconhecido'}`);
+    }
+  },
+
+  async removerUsuarioArtificial(userId: string): Promise<void> {
+    try {
+      console.log('Removendo usuário artificial:', userId);
+      const docRef = doc(db, 'usuarios', userId);
+      await deleteDoc(docRef);
+      console.log('Usuário artificial removido com sucesso');
+    } catch (error: any) {
+      console.error('Erro ao remover usuário artificial:', error);
     }
   },
 
@@ -167,12 +187,19 @@ export const usuarioService = {
           ...userData,
           userId: querySnapshot.docs[0].id
         };
+        
+        // Verificar se é um usuário artificial
+        if (result.userId.startsWith('parceiro_')) {
+          console.log('Usuário artificial encontrado na busca completa, removendo...');
+          await this.removerUsuarioArtificial(result.userId);
+          return null;
+        }
+        
         console.log('Usuário encontrado na coleção usuarios:', result);
         return result;
       }
 
       // Se não encontrou na coleção usuarios, tentar buscar por outros meios
-      // Por exemplo, se o usuário tem uma conta mas não salvou configuração ainda
       console.log('Tentando buscar usuário por outros meios...');
       
       // Aqui você pode adicionar outras lógicas de busca se necessário
@@ -182,6 +209,29 @@ export const usuarioService = {
     } catch (error: any) {
       console.error('Erro ao buscar usuário por e-mail (busca completa):', error);
       throw new Error(`Erro ao buscar usuário: ${error.message || 'Erro desconhecido'}`);
+    }
+  },
+
+  async limparUsuariosArtificiais(): Promise<void> {
+    try {
+      console.log('Limpando todos os usuários artificiais...');
+      const usuariosRef = collection(db, 'usuarios');
+      const querySnapshot = await getDocs(usuariosRef);
+      
+      const usuariosParaRemover = querySnapshot.docs.filter(doc => 
+        doc.id.startsWith('parceiro_')
+      );
+      
+      console.log(`Encontrados ${usuariosParaRemover.length} usuários artificiais para remover`);
+      
+      for (const doc of usuariosParaRemover) {
+        await deleteDoc(doc.ref);
+        console.log('Usuário artificial removido:', doc.id);
+      }
+      
+      console.log('Limpeza de usuários artificiais concluída');
+    } catch (error: any) {
+      console.error('Erro ao limpar usuários artificiais:', error);
     }
   },
 }; 
