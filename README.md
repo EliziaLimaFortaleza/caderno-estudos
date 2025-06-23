@@ -196,3 +196,27 @@ Para dúvidas ou problemas:
 ---
 
 **Desenvolvido com ❤️ para ajudar nos estudos!**
+
+# Caderno de Estudos
+
+Aplicação para gerenciamento de estudos, revisões e caderno de erros.
+
+## Funcionalidades
+
+- Cadastro de estudos por matéria e assunto
+- Sistema de revisões programadas
+- Caderno de erros com questões
+- Painel de desempenho
+- Sistema de parceiros de estudo
+- Comentários em questões
+
+## Tecnologias
+
+- React.js
+- TypeScript
+- Tailwind CSS
+- Firebase (Firestore, Authentication)
+
+## Deploy
+
+O projeto está configurado para deploy automático via GitHub Actions.
