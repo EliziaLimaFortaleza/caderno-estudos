@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/caderno-estudos/static/css/main.2e69d2f5.css",
-    "main.js": "/caderno-estudos/static/js/main.60bd90ec.js",
+    "main.js": "/caderno-estudos/static/js/main.c15eeb5c.js",
     "static/js/453.0c193856.chunk.js": "/caderno-estudos/static/js/453.0c193856.chunk.js",
     "index.html": "/caderno-estudos/index.html",
     "main.2e69d2f5.css.map": "/caderno-estudos/static/css/main.2e69d2f5.css.map",
-    "main.60bd90ec.js.map": "/caderno-estudos/static/js/main.60bd90ec.js.map",
+    "main.c15eeb5c.js.map": "/caderno-estudos/static/js/main.c15eeb5c.js.map",
     "453.0c193856.chunk.js.map": "/caderno-estudos/static/js/453.0c193856.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.2e69d2f5.css",
-    "static/js/main.60bd90ec.js"
+    "static/js/main.c15eeb5c.js"
   ]
 }
