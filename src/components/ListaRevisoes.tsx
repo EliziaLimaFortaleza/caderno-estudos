@@ -9,6 +9,7 @@ export function ListaRevisoes() {
   const [revisoes, setRevisoes] = useState<Revisao[]>([]);
   const [estudos, setEstudos] = useState<Estudo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filtro, setFiltro] = useState<'todas' | 'pendentes' | 'concluidas'>('todas');
 
   useEffect(() => {
     if (currentUser) {
@@ -22,7 +23,7 @@ export function ListaRevisoes() {
     try {
       setLoading(true);
       const [revisoesData, estudosData] = await Promise.all([
-        revisaoService.buscarRevisoesPendentes(currentUser.uid),
+        revisaoService.buscarRevisoesPorUsuario(currentUser.uid),
         estudoService.buscarEstudosPorUsuario(currentUser.uid)
       ]);
       
@@ -84,6 +85,17 @@ export function ListaRevisoes() {
     return estudos.find(estudo => estudo.id === revisao.estudoId);
   }
 
+  // Filtrar revisões baseado no filtro selecionado
+  const revisoesFiltradas = revisoes.filter(revisao => {
+    if (filtro === 'todas') return true;
+    if (filtro === 'pendentes') return revisao.status === 'pendente';
+    if (filtro === 'concluidas') return revisao.status === 'concluida';
+    return true;
+  });
+
+  const revisoesPendentes = revisoes.filter(r => r.status === 'pendente').length;
+  const revisoesConcluidas = revisoes.filter(r => r.status === 'concluida').length;
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -95,28 +107,49 @@ export function ListaRevisoes() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">Revisões Pendentes</h2>
-        <div className="text-sm text-gray-500">
-          Total: {revisoes.length} revisões
+        <h2 className="text-2xl font-bold text-gray-900">Revisões</h2>
+        <div className="flex items-center space-x-4">
+          <div className="text-sm text-gray-500">
+            {revisoesPendentes} pendentes • {revisoesConcluidas} concluídas
+          </div>
+          <select
+            value={filtro}
+            onChange={(e) => setFiltro(e.target.value as any)}
+            className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            <option value="todas">Todas</option>
+            <option value="pendentes">Pendentes</option>
+            <option value="concluidas">Concluídas</option>
+          </select>
         </div>
       </div>
 
-      {revisoes.length === 0 ? (
+      {revisoesFiltradas.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-gray-500 text-lg">Nenhuma revisão pendente.</p>
-          <p className="text-gray-400 text-sm mt-2">Marque seus estudos para revisão para vê-los aqui!</p>
+          <p className="text-gray-500 text-lg">
+            {filtro === 'todas' && 'Nenhuma revisão cadastrada.'}
+            {filtro === 'pendentes' && 'Nenhuma revisão pendente.'}
+            {filtro === 'concluidas' && 'Nenhuma revisão concluída.'}
+          </p>
+          <p className="text-gray-400 text-sm mt-2">
+            {filtro === 'todas' && 'Marque seus estudos para revisão para vê-los aqui!'}
+            {filtro === 'pendentes' && 'Todas as suas revisões foram concluídas!'}
+            {filtro === 'concluidas' && 'Conclua algumas revisões para vê-las aqui!'}
+          </p>
         </div>
       ) : (
         <div className="space-y-4">
-          {revisoes.map((revisao) => {
+          {revisoesFiltradas.map((revisao) => {
             const estudo = obterEstudo(revisao);
             const diasAtraso = calcularDiasAtraso(revisao.dataRevisao);
-            const estaAtrasada = diasAtraso > 0;
+            const estaAtrasada = diasAtraso > 0 && revisao.status === 'pendente';
+            const estaConcluida = revisao.status === 'concluida';
 
             return (
               <div 
                 key={revisao.id} 
                 className={`bg-white rounded-lg shadow-md p-6 border-l-4 ${
+                  estaConcluida ? 'border-green-500' :
                   estaAtrasada ? 'border-red-500' : 'border-yellow-500'
                 }`}
               >
@@ -125,11 +158,8 @@ export function ListaRevisoes() {
                     {estudo ? (
                       <>
                         <h3 className="text-lg font-semibold text-gray-900">
-                          {estudo.concurso} - {estudo.cargo}
+                          {estudo.materia}
                         </h3>
-                        <p className="text-sm text-gray-600 mt-1">
-                          <span className="font-medium">Matéria:</span> {estudo.materia}
-                        </p>
                         <p className="text-sm text-gray-600">
                           <span className="font-medium">Assunto:</span> {estudo.assunto}
                         </p>
@@ -150,16 +180,23 @@ export function ListaRevisoes() {
                           ⚠️ {diasAtraso} dia{diasAtraso > 1 ? 's' : ''} de atraso
                         </p>
                       )}
+                      {estaConcluida && (
+                        <p className="text-sm text-green-600 font-medium">
+                          ✅ Revisão concluída
+                        </p>
+                      )}
                     </div>
                   </div>
 
                   <div className="flex space-x-2 ml-4">
-                    <button
-                      onClick={() => handleConcluirRevisao(revisao.id)}
-                      className="bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-700"
-                    >
-                      Concluir
-                    </button>
+                    {!estaConcluida && (
+                      <button
+                        onClick={() => handleConcluirRevisao(revisao.id)}
+                        className="bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-700"
+                      >
+                        Concluir
+                      </button>
+                    )}
                     <button
                       onClick={() => handleDeletarRevisao(revisao.id)}
                       className="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700"

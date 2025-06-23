@@ -16,6 +16,41 @@ export function ListaEstudos({ estudos, onEstudoAtualizado }: ListaEstudosProps)
   const [mostrarModalRevisao, setMostrarModalRevisao] = useState(false);
   const [estudoParaRevisao, setEstudoParaRevisao] = useState<string | null>(null);
   const [dataRevisao, setDataRevisao] = useState('');
+  const [mostrarFormulario, setMostrarFormulario] = useState(false);
+  const [novoEstudo, setNovoEstudo] = useState({
+    materia: '',
+    assunto: ''
+  });
+  const [criandoEstudo, setCriandoEstudo] = useState(false);
+
+  async function handleCriarEstudo(e: React.FormEvent) {
+    e.preventDefault();
+    
+    if (!currentUser) return;
+
+    if (!novoEstudo.materia || !novoEstudo.assunto) {
+      alert('Preencha todos os campos');
+      return;
+    }
+
+    try {
+      setCriandoEstudo(true);
+      await estudoService.criarEstudo({
+        ...novoEstudo,
+        userId: currentUser.uid
+      });
+
+      setNovoEstudo({ materia: '', assunto: '' });
+      setMostrarFormulario(false);
+      onEstudoAtualizado();
+      alert('Estudo criado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao criar estudo:', error);
+      alert('Erro ao criar estudo. Tente novamente.');
+    } finally {
+      setCriandoEstudo(false);
+    }
+  }
 
   async function handleDeletar(id: string) {
     if (!currentUser) return;
@@ -93,10 +128,77 @@ export function ListaEstudos({ estudos, onEstudoAtualizado }: ListaEstudosProps)
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">Meus Estudos</h2>
-        <div className="text-sm text-gray-500">
-          Total: {estudos.length} estudos
+        <div className="flex items-center space-x-4">
+          <div className="text-sm text-gray-500">
+            Total: {estudos.length} estudos
+          </div>
+          <button
+            onClick={() => setMostrarFormulario(!mostrarFormulario)}
+            className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700"
+          >
+            {mostrarFormulario ? 'Cancelar' : 'Novo Estudo'}
+          </button>
         </div>
       </div>
+
+      {/* Formulário de novo estudo */}
+      {mostrarFormulario && (
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Novo Estudo</h3>
+          
+          <form onSubmit={handleCriarEstudo} className="space-y-4">
+            <div>
+              <label htmlFor="materia" className="block text-sm font-medium text-gray-700 mb-2">
+                Matéria *
+              </label>
+              <input
+                type="text"
+                id="materia"
+                value={novoEstudo.materia}
+                onChange={(e) => setNovoEstudo({...novoEstudo, materia: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="Ex: Direito Constitucional"
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="assunto" className="block text-sm font-medium text-gray-700 mb-2">
+                Assunto *
+              </label>
+              <textarea
+                id="assunto"
+                value={novoEstudo.assunto}
+                onChange={(e) => setNovoEstudo({...novoEstudo, assunto: e.target.value})}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="Ex: Princípios fundamentais da Constituição Federal"
+                required
+              />
+            </div>
+
+            <div className="flex space-x-2">
+              <button
+                type="submit"
+                disabled={criandoEstudo}
+                className="bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-700 disabled:opacity-50"
+              >
+                {criandoEstudo ? 'Criando...' : 'Criar Estudo'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setNovoEstudo({ materia: '', assunto: '' });
+                  setMostrarFormulario(false);
+                }}
+                className="bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700"
+              >
+                Cancelar
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {estudos.length === 0 ? (
         <div className="text-center py-12">

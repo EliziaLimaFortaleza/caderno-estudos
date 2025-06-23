@@ -3,16 +3,15 @@ import { useAuth } from '../contexts/AuthContext';
 import { Estudo } from '../types';
 import { estudoService } from '../services/estudoService';
 import { ListaEstudos } from './ListaEstudos';
-import { FormularioEstudo } from './FormularioEstudo';
 import { PainelDesempenho } from './PainelDesempenho';
 import { ListaRevisoes } from './ListaRevisoes';
 import { CadernoErros } from './CadernoErros';
 
-type TabType = 'estudos' | 'novo-estudo' | 'revisoes' | 'desempenho' | 'caderno-erros';
+type TabType = 'estudos' | 'revisoes' | 'desempenho' | 'caderno-erros';
 
 export function Dashboard() {
   const { currentUser, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState<TabType>('estudos');
+  const [activeTab, setActiveTab] = useState<TabType>('desempenho');
   const [estudos, setEstudos] = useState<Estudo[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -47,10 +46,9 @@ export function Dashboard() {
   }
 
   const tabs = [
-    { id: 'estudos', label: 'Meus Estudos', icon: '📚' },
-    { id: 'novo-estudo', label: 'Novo Estudo', icon: '➕' },
-    { id: 'revisoes', label: 'Revisões', icon: '🔄' },
     { id: 'desempenho', label: 'Desempenho', icon: '📊' },
+    { id: 'estudos', label: 'Meus Estudos', icon: '📚' },
+    { id: 'revisoes', label: 'Revisões', icon: '🔄' },
     { id: 'caderno-erros', label: 'Caderno de Erros', icon: '❌' },
   ];
 
@@ -62,7 +60,7 @@ export function Dashboard() {
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center">
               <h1 className="text-3xl font-bold text-gray-900">
-                Caderno de Estudos
+                Progress!
               </h1>
             </div>
             <div className="flex items-center space-x-4">
@@ -111,22 +109,17 @@ export function Dashboard() {
             </div>
           ) : (
             <>
+              {activeTab === 'desempenho' && (
+                <PainelDesempenho estudos={estudos} />
+              )}
               {activeTab === 'estudos' && (
                 <ListaEstudos 
                   estudos={estudos} 
                   onEstudoAtualizado={carregarEstudos} 
                 />
               )}
-              {activeTab === 'novo-estudo' && (
-                <FormularioEstudo 
-                  onEstudoCriado={carregarEstudos} 
-                />
-              )}
               {activeTab === 'revisoes' && (
                 <ListaRevisoes />
-              )}
-              {activeTab === 'desempenho' && (
-                <PainelDesempenho estudos={estudos} />
               )}
               {activeTab === 'caderno-erros' && (
                 <CadernoErros estudos={estudos} />

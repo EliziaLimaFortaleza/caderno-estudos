@@ -55,10 +55,14 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
         await questaoService.atualizarQuestao(editandoId, formData);
         alert('Questão atualizada com sucesso!');
       } else {
-        await questaoService.criarQuestao({
-          ...formData,
+        const questaoData = {
+          estudoId: formData.estudoId,
+          enunciado: formData.enunciado,
+          comentario: formData.comentario,
           userId: currentUser.uid
-        });
+        };
+        
+        await questaoService.criarQuestao(questaoData);
         alert('Questão criada com sucesso!');
       }
 
