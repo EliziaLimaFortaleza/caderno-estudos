@@ -1,0 +1,38 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function para verificar se o usuário está autenticado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function para verificar se o usuário é o dono do recurso
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Usuários só podem ler e escrever seus próprios dados de configuração
+    match /usuarios/{userId} {
+      allow read, update, delete: if isOwner(userId);
+      allow create: if isAuthenticated();
+    }
+
+    // Usuários só podem ler, criar e alterar seus próprios estudos, questões e revisões
+    match /estudos/{estudoId} {
+      allow read, create, update, delete: if isAuthenticated() && isOwner(request.resource.data.userId);
+    }
+    
+    match /questoes/{questaoId} {
+      // Leitura: Permitir se o usuário estiver autenticado (para parceiros verem)
+      // Escrita (create, update, delete): Apenas o dono pode fazer
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAuthenticated() && isOwner(request.resource.data.userId);
+    }
+
+    match /revisoes/{revisaoId} {
+      allow read, create, update, delete: if isAuthenticated() && isOwner(request.resource.data.userId);
+    }
+  }
+} 

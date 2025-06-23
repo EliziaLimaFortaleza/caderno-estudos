@@ -4,13 +4,13 @@ import { getFirestore } from 'firebase/firestore';
 
 // 🔥 Configuração do Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyCe86GSmNHntr_QkAOBZQQXfk1-ZQ6PR1k",
-  authDomain: "caderno-estudos.firebaseapp.com",
-  projectId: "caderno-estudos",
-  storageBucket: "caderno-estudos.firebasestorage.app",
-  messagingSenderId: "1085872839107",
-  appId: "1:1085872839107:web:abc3bacde269b4ffc5c576",
-  measurementId: "G-Y0F6Q8P5T0"
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.REACT_APP_FIREBASE_APP_ID,
+  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID
 };
 
 // ⚠️ IMPORTANTE: Configure também no Firebase Console:
