@@ -13,6 +13,9 @@ export function ListaEstudos({ estudos, onEstudoAtualizado }: ListaEstudosProps)
   const { currentUser } = useAuth();
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [editandoEstudo, setEditandoEstudo] = useState<Partial<Estudo>>({});
+  const [mostrarModalRevisao, setMostrarModalRevisao] = useState(false);
+  const [estudoParaRevisao, setEstudoParaRevisao] = useState<string | null>(null);
+  const [dataRevisao, setDataRevisao] = useState('');
 
   async function handleDeletar(id: string) {
     if (!currentUser) return;
@@ -42,20 +45,33 @@ export function ListaEstudos({ estudos, onEstudoAtualizado }: ListaEstudosProps)
     }
   }
 
-  async function handleMarcarParaRevisao(estudoId: string) {
-    if (!currentUser) return;
+  function abrirModalRevisao(estudoId: string) {
+    setEstudoParaRevisao(estudoId);
+    // Definir data padrão (7 dias a partir de hoje)
+    const dataPadrao = new Date();
+    dataPadrao.setDate(dataPadrao.getDate() + 7);
+    setDataRevisao(dataPadrao.toISOString().split('T')[0]);
+    setMostrarModalRevisao(true);
+  }
+
+  async function handleMarcarParaRevisao() {
+    if (!currentUser || !estudoParaRevisao || !dataRevisao) return;
     
     try {
-      // Marcar para revisar em 7 dias
-      const dataRevisao = new Date();
-      dataRevisao.setDate(dataRevisao.getDate() + 7);
-      
-      await revisaoService.marcarParaRevisao(estudoId, currentUser.uid, dataRevisao);
-      alert('Estudo marcado para revisão em 7 dias!');
+      const dataRevisaoObj = new Date(dataRevisao);
+      await revisaoService.marcarParaRevisao(estudoParaRevisao, currentUser.uid, dataRevisaoObj);
+      alert(`Estudo marcado para revisão em ${dataRevisaoObj.toLocaleDateString()}`);
+      fecharModalRevisao();
     } catch (error) {
       console.error('Erro ao marcar para revisão:', error);
       alert('Erro ao marcar para revisão');
     }
+  }
+
+  function fecharModalRevisao() {
+    setMostrarModalRevisao(false);
+    setEstudoParaRevisao(null);
+    setDataRevisao('');
   }
 
   function iniciarEdicao(estudo: Estudo) {
@@ -139,13 +155,7 @@ export function ListaEstudos({ estudos, onEstudoAtualizado }: ListaEstudosProps)
               ) : (
                 <>
                   <div className="space-y-2">
-                    <h3 className="text-lg font-semibold text-gray-900">{estudo.concurso}</h3>
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium">Cargo:</span> {estudo.cargo}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium">Matéria:</span> {estudo.materia}
-                    </p>
+                    <h3 className="text-lg font-semibold text-gray-900">{estudo.materia}</h3>
                     <p className="text-sm text-gray-600">
                       <span className="font-medium">Assunto:</span> {estudo.assunto}
                     </p>
@@ -156,7 +166,7 @@ export function ListaEstudos({ estudos, onEstudoAtualizado }: ListaEstudosProps)
                   
                   <div className="mt-4 flex space-x-2">
                     <button
-                      onClick={() => handleMarcarParaRevisao(estudo.id)}
+                      onClick={() => abrirModalRevisao(estudo.id)}
                       className="flex-1 bg-blue-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
                     >
                       Marcar para Revisar
@@ -178,6 +188,48 @@ export function ListaEstudos({ estudos, onEstudoAtualizado }: ListaEstudosProps)
               )}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Modal para definir data da revisão */}
+      {mostrarModalRevisao && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Definir Data da Revisão
+            </h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="dataRevisao" className="block text-sm font-medium text-gray-700 mb-2">
+                  Data da Revisão
+                </label>
+                <input
+                  type="date"
+                  id="dataRevisao"
+                  value={dataRevisao}
+                  onChange={(e) => setDataRevisao(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  min={new Date().toISOString().split('T')[0]}
+                />
+              </div>
+              
+              <div className="flex space-x-2">
+                <button
+                  onClick={handleMarcarParaRevisao}
+                  className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
+                >
+                  Confirmar
+                </button>
+                <button
+                  onClick={fecharModalRevisao}
+                  className="flex-1 bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
