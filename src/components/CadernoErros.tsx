@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Estudo, Questao } from '../types';
 import { questaoService } from '../services/questaoService';
@@ -29,8 +29,21 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
   const [visualizandoParceiro, setVisualizandoParceiro] = useState(false);
   const [comentarioParaQuestao, setComentarioParaQuestao] = useState('');
   const [questaoParaComentar, setQuestaoParaComentar] = useState<string | null>(null);
-  const [meuApelido, setMeuApelido] = useState('');
   const [apelidoParceiro, setApelidoParceiro] = useState('');
+
+  const carregarQuestoes = useCallback(async () => {
+    if (!currentUser) return;
+
+    try {
+      setLoading(true);
+      const questoesData = await questaoService.buscarQuestoesPorUsuario(currentUser.uid);
+      setQuestoes(questoesData);
+    } catch (error) {
+      console.error('Erro ao carregar questões:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     if (currentUser) {
@@ -46,10 +59,6 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
     (async () => {
       // Buscar config do usuário logado
       const minhaConfig = await usuarioService.obterConfiguracao(currentUser.uid);
-      if (minhaConfig?.meuApelido) {
-        setMeuApelido(minhaConfig.meuApelido);
-        console.log('Meu apelido carregado:', minhaConfig.meuApelido);
-      }
       // Buscar config do parceiro, se houver
       if (minhaConfig?.parceiroEmail) {
         const parceiroConfig = await usuarioService.buscarUsuarioPorEmail(minhaConfig.parceiroEmail);
@@ -67,21 +76,7 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
       }
       await carregarQuestoes();
     })();
-  }, [currentUser]);
-
-  async function carregarQuestoes() {
-    if (!currentUser) return;
-
-    try {
-      setLoading(true);
-      const questoesData = await questaoService.buscarQuestoesPorUsuario(currentUser.uid);
-      setQuestoes(questoesData);
-    } catch (error) {
-      console.error('Erro ao carregar questões:', error);
-    } finally {
-      setLoading(false);
-    }
-  }
+  }, [currentUser, carregarQuestoes]);
 
   async function carregarParceiro() {
     if (!currentUser) return;
@@ -90,12 +85,6 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
       console.log('Carregando parceiro para usuário:', currentUser.uid);
       const config = await usuarioService.obterConfiguracao(currentUser.uid);
       console.log('Configuração carregada:', config);
-      
-      // Carregar o próprio apelido do usuário
-      if (config?.meuApelido) {
-        setMeuApelido(config.meuApelido);
-        console.log('Meu apelido carregado:', config.meuApelido);
-      }
       
       if (config?.parceiroEmail) {
         console.log('Email do parceiro encontrado:', config.parceiroEmail);
