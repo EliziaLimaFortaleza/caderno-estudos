@@ -26,7 +26,20 @@ export interface Questao {
   enunciado: string;
   comentario?: string;
   comentarioParceiro?: string;
+  comentarios?: {
+    [userId: string]: {
+      texto: string;
+      autor: string;
+      data: Date | any;
+    };
+  };
   acertou?: boolean;
+  resultados?: {
+    [userId: string]: {
+      acertou: boolean;
+      data: Date | any;
+    };
+  };
   createdAt: Date | any;
   updatedAt: Date | any;
 }

@@ -127,9 +127,13 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
   }
 
   async function handleMarcarQuestao(id: string, acertou: boolean) {
+    if (!currentUser) return;
     try {
-      await questaoService.marcarQuestao(id, acertou);
+      await questaoService.marcarQuestao(id, acertou, currentUser.uid);
       await carregarQuestoes();
+      if (parceiro) {
+        await carregarParceiro(); // Recarregar questões do parceiro
+      }
     } catch (error) {
       console.error('Erro ao marcar questão:', error);
       alert('Erro ao marcar questão');
@@ -137,13 +141,14 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
   }
 
   async function adicionarComentarioParaQuestao(questaoId: string) {
-    if (!comentarioParaQuestao.trim()) {
+    if (!comentarioParaQuestao.trim() || !currentUser) {
       alert('Digite um comentário');
       return;
     }
 
     try {
-      await questaoService.adicionarComentarioParaQuestao(questaoId, comentarioParaQuestao);
+      const autor = visualizandoParceiro ? (apelidoParceiro || 'Parceiro') : 'Você';
+      await questaoService.adicionarComentarioParaQuestao(questaoId, comentarioParaQuestao, currentUser.uid, autor);
       setComentarioParaQuestao('');
       setQuestaoParaComentar(null);
       await carregarQuestoes();
@@ -378,6 +383,23 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
                         </div>
                       )}
 
+                      {/* Novos comentários */}
+                      {questao.comentarios && Object.keys(questao.comentarios).length > 0 && (
+                        <div className="mb-3">
+                          <h4 className="font-medium text-gray-900 mb-2">Comentários:</h4>
+                          {Object.entries(questao.comentarios).map(([userId, comentario]) => (
+                            <div key={userId} className="mb-2 p-2 bg-gray-50 rounded">
+                              <div className="text-xs text-gray-500 mb-1">
+                                {comentario.autor} - {comentario.data instanceof Date 
+                                  ? comentario.data.toLocaleDateString() 
+                                  : new Date(comentario.data?.seconds * 1000).toLocaleDateString()}
+                              </div>
+                              <p className="text-sm text-gray-700">{comentario.texto}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
                       {/* Campo para adicionar comentário */}
                       {isQuestaoParceiro && (
                         <div className="mt-4">
@@ -444,7 +466,7 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
                     <button
                       onClick={() => handleMarcarQuestao(questao.id, true)}
                       className={`px-3 py-1 rounded text-sm font-medium ${
-                        questao.acertou === true
+                        questao.resultados?.[currentUser?.uid || '']?.acertou === true
                           ? 'bg-green-600 text-white'
                           : 'bg-gray-200 text-gray-700 hover:bg-green-100'
                       }`}
@@ -454,19 +476,29 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
                     <button
                       onClick={() => handleMarcarQuestao(questao.id, false)}
                       className={`px-3 py-1 rounded text-sm font-medium ${
-                        questao.acertou === false
+                        questao.resultados?.[currentUser?.uid || '']?.acertou === false
                           ? 'bg-red-600 text-white'
                           : 'bg-gray-200 text-gray-700 hover:bg-red-100'
                       }`}
                     >
                       ✗ Errou
                     </button>
-                    {questao.acertou !== undefined && (
+                    {questao.resultados?.[currentUser?.uid || '']?.acertou !== undefined && (
                       <span className="text-sm text-gray-500">
-                        {questao.acertou ? '✓ Acertou' : '✗ Errou'}
+                        {questao.resultados[currentUser?.uid || ''].acertou ? '✓ Acertou' : '✗ Errou'}
                       </span>
                     )}
                   </div>
+
+                  {/* Mostrar resultados do parceiro se visualizando questões dele */}
+                  {visualizandoParceiro && parceiro && questao.resultados?.[parceiro.userId] && (
+                    <div className="mt-2 p-2 bg-purple-50 rounded">
+                      <span className="text-sm text-purple-700">
+                        Resultado do {apelidoParceiro || 'Parceiro'}: 
+                        {questao.resultados[parceiro.userId].acertou ? ' ✓ Acertou' : ' ✗ Errou'}
+                      </span>
+                    </div>
+                  )}
                 </div>
               );
             })}

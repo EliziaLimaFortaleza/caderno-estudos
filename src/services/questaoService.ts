@@ -81,14 +81,25 @@ export const questaoService = {
     });
   },
 
-  async marcarQuestao(questaoId: string, acertou: boolean): Promise<void> {
-    await this.atualizarQuestao(questaoId, { acertou });
-  },
-
-  async adicionarComentarioParaQuestao(questaoId: string, comentario: string): Promise<void> {
+  async marcarQuestao(questaoId: string, acertou: boolean, userId: string): Promise<void> {
     const docRef = doc(db, 'questoes', questaoId);
     await updateDoc(docRef, {
-      comentarioParceiro: comentario,
+      [`resultados.${userId}`]: {
+        acertou,
+        data: serverTimestamp()
+      },
+      updatedAt: serverTimestamp()
+    });
+  },
+
+  async adicionarComentarioParaQuestao(questaoId: string, comentario: string, userId: string, autor: string): Promise<void> {
+    const docRef = doc(db, 'questoes', questaoId);
+    await updateDoc(docRef, {
+      [`comentarios.${userId}`]: {
+        texto: comentario,
+        autor,
+        data: serverTimestamp()
+      },
       updatedAt: serverTimestamp()
     });
   }
