@@ -44,11 +44,18 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
     (async () => {
       // Buscar config do usuário logado
       const minhaConfig = await usuarioService.obterConfiguracao(currentUser.uid);
-      if (minhaConfig?.meuApelido) setMeuApelido(minhaConfig.meuApelido);
+      if (minhaConfig?.meuApelido) {
+        setMeuApelido(minhaConfig.meuApelido);
+        console.log('Meu apelido carregado:', minhaConfig.meuApelido);
+      }
       // Buscar config do parceiro, se houver
       if (minhaConfig?.parceiroEmail) {
         const parceiroConfig = await usuarioService.buscarUsuarioPorEmail(minhaConfig.parceiroEmail);
-        if (parceiroConfig?.meuApelido) setApelidoParceiro(parceiroConfig.meuApelido);
+        // Usar o apelido que o usuário definiu para o parceiro
+        if (minhaConfig?.apelidoParceiro) {
+          setApelidoParceiro(minhaConfig.apelidoParceiro);
+          console.log('Apelido do parceiro carregado:', minhaConfig.apelidoParceiro);
+        }
         setParceiro(parceiroConfig);
         // Carregar questões do parceiro
         if (parceiroConfig) {
@@ -93,7 +100,12 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
         const parceiroData = await usuarioService.buscarUsuarioPorEmail(config.parceiroEmail);
         console.log('Dados do parceiro:', parceiroData);
         setParceiro(parceiroData);
-        setApelidoParceiro(config.apelidoParceiro || '');
+        
+        // Usar o apelido que o usuário definiu para o parceiro
+        if (config?.apelidoParceiro) {
+          setApelidoParceiro(config.apelidoParceiro);
+          console.log('Apelido do parceiro carregado:', config.apelidoParceiro);
+        }
         
         // Carregar questões do parceiro
         if (parceiroData) {
@@ -176,10 +188,13 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
       // Buscar config do autor do comentário
       let apelidoAutor = '';
       const minhaConfig = await usuarioService.obterConfiguracao(currentUser.uid);
+      console.log('Configuração do usuário para comentário:', minhaConfig);
       if (minhaConfig?.meuApelido) {
         apelidoAutor = minhaConfig.meuApelido;
+        console.log('Usando apelido configurado:', apelidoAutor);
       } else {
         apelidoAutor = currentUser.email?.split('@')[0] || 'Usuário';
+        console.log('Usando email como apelido:', apelidoAutor);
       }
       const questaoRef = doc(db, 'questoes', questaoId);
       const questaoDoc = await getDoc(questaoRef);
@@ -196,6 +211,7 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
         texto: comentarioParaQuestao,
         data: new Date().toISOString()
       };
+      console.log('Novo comentário a ser salvo:', novoComentarioObj);
       const comentariosAtualizados = [...comentariosExistentes, novoComentarioObj];
       await updateDoc(questaoRef, { comentarios: comentariosAtualizados });
       setComentarioParaQuestao('');
@@ -417,38 +433,44 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
                           <h4 className="font-semibold text-gray-700">Comentários:</h4>
                           {Array.isArray(questao.comentarios) ? (
                             // Nova estrutura: array de comentários
-                            questao.comentarios.map((comentario: any, index: number) => (
-                              <div key={comentario.id || index} className="bg-gray-50 p-3 rounded-lg">
-                                <div className="flex justify-between items-start mb-2">
-                                  <span className="font-medium text-blue-600">
-                                    {comentario.apelido || comentario.autor || 'Usuário'}
-                                  </span>
-                                  <span className="text-xs text-gray-500">
-                                    {comentario.data ? new Date(comentario.data).toLocaleDateString('pt-BR') : 'Data não disponível'}
-                                  </span>
+                            questao.comentarios.map((comentario: any, index: number) => {
+                              console.log('Exibindo comentário:', comentario);
+                              return (
+                                <div key={comentario.id || index} className="bg-gray-50 p-3 rounded-lg">
+                                  <div className="flex justify-between items-start mb-2">
+                                    <span className="font-medium text-blue-600">
+                                      {comentario.apelido || comentario.autor || 'Usuário'}
+                                    </span>
+                                    <span className="text-xs text-gray-500">
+                                      {comentario.data ? new Date(comentario.data).toLocaleDateString('pt-BR') : 'Data não disponível'}
+                                    </span>
+                                  </div>
+                                  <p className="text-gray-700">{comentario.texto}</p>
                                 </div>
-                                <p className="text-gray-700">{comentario.texto}</p>
-                              </div>
-                            ))
+                              );
+                            })
                           ) : (
                             // Estrutura antiga: objeto com userId como chave
-                            Object.entries(questao.comentarios).map(([userId, comentario]: [string, any]) => (
-                              <div key={userId} className="bg-gray-50 p-3 rounded-lg">
-                                <div className="flex justify-between items-start mb-2">
-                                  <span className="font-medium text-blue-600">
-                                    {comentario.autor || 'Usuário'}
-                                  </span>
-                                  <span className="text-xs text-gray-500">
-                                    {comentario.data instanceof Date 
-                                      ? comentario.data.toLocaleDateString('pt-BR')
-                                      : comentario.data?.seconds 
-                                        ? new Date(comentario.data.seconds * 1000).toLocaleDateString('pt-BR')
-                                        : 'Data não disponível'}
-                                  </span>
+                            Object.entries(questao.comentarios).map(([userId, comentario]: [string, any]) => {
+                              console.log('Exibindo comentário (estrutura antiga):', comentario);
+                              return (
+                                <div key={userId} className="bg-gray-50 p-3 rounded-lg">
+                                  <div className="flex justify-between items-start mb-2">
+                                    <span className="font-medium text-blue-600">
+                                      {comentario.autor || 'Usuário'}
+                                    </span>
+                                    <span className="text-xs text-gray-500">
+                                      {comentario.data instanceof Date 
+                                        ? comentario.data.toLocaleDateString('pt-BR')
+                                        : comentario.data?.seconds 
+                                          ? new Date(comentario.data.seconds * 1000).toLocaleDateString('pt-BR')
+                                          : 'Data não disponível'}
+                                    </span>
+                                  </div>
+                                  <p className="text-gray-700">{comentario.texto}</p>
                                 </div>
-                                <p className="text-gray-700">{comentario.texto}</p>
-                              </div>
-                            ))
+                              );
+                            })
                           )}
                         </div>
                       )}
