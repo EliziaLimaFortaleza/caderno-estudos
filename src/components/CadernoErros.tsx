@@ -19,8 +19,7 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
     estudoId: '',
     enunciado: '',
     comentario: '',
-    acertou: undefined as boolean | undefined,
-    comentarioParceiro: ''
+    acertou: undefined as boolean | undefined
   });
   const [parceiro, setParceiro] = useState<any>(null);
   const [visualizandoParceiro, setVisualizandoParceiro] = useState(false);
@@ -98,7 +97,6 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
           estudoId: formData.estudoId,
           enunciado: formData.enunciado,
           comentario: formData.comentario,
-          comentarioParceiro: formData.comentarioParceiro,
           userId: currentUser.uid
         };
         
@@ -167,7 +165,6 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
       enunciado: questao.enunciado,
       comentario: questao.comentario || '',
       acertou: questao.acertou,
-      comentarioParceiro: questao.comentarioParceiro || ''
     });
     setMostrarFormulario(true);
   }
@@ -178,7 +175,6 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
       enunciado: '',
       comentario: '',
       acertou: undefined,
-      comentarioParceiro: ''
     });
     setEditandoId(null);
     setMostrarFormulario(false);
@@ -299,21 +295,6 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
               />
             </div>
 
-            <div>
-              <label htmlFor="comentarioParceiro" className="block text-sm font-medium text-gray-700 mb-2">
-                Comentário para Parceiro
-              </label>
-              <textarea
-                id="comentarioParceiro"
-                name="comentarioParceiro"
-                value={formData.comentarioParceiro || ''}
-                onChange={(e) => setFormData({...formData, comentarioParceiro: e.target.value})}
-                rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="Dica ou comentário para seu parceiro de estudos..."
-              />
-            </div>
-
             <div className="flex space-x-4">
               <button
                 type="submit"
@@ -376,70 +357,72 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
                         </div>
                       )}
 
-                      {questao.comentarioParceiro && (
-                        <div className="mb-3">
-                          <h4 className="font-medium text-blue-900 mb-1">💡 Dica para Parceiro:</h4>
-                          <p className="text-blue-700 text-sm bg-blue-50 p-2 rounded border-l-4 border-blue-300">{questao.comentarioParceiro}</p>
-                        </div>
-                      )}
-
-                      {/* Novos comentários */}
+                      {/* Sistema de Fórum - Comentários */}
                       {questao.comentarios && Object.keys(questao.comentarios).length > 0 && (
-                        <div className="mb-3">
-                          <h4 className="font-medium text-gray-900 mb-2">Comentários:</h4>
-                          {Object.entries(questao.comentarios).map(([userId, comentario]) => (
-                            <div key={userId} className="mb-2 p-2 bg-gray-50 rounded">
-                              <div className="text-xs text-gray-500 mb-1">
-                                {comentario.autor} - {comentario.data instanceof Date 
-                                  ? comentario.data.toLocaleDateString() 
-                                  : new Date(comentario.data?.seconds * 1000).toLocaleDateString()}
+                        <div className="mb-4">
+                          <h4 className="font-medium text-gray-900 mb-3 flex items-center">
+                            <span className="mr-2">💬</span>
+                            Comentários ({Object.keys(questao.comentarios).length})
+                          </h4>
+                          <div className="space-y-3">
+                            {Object.entries(questao.comentarios).map(([userId, comentario]) => (
+                              <div key={userId} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-sm font-medium text-blue-600">
+                                    {comentario.autor}
+                                  </span>
+                                  <span className="text-xs text-gray-500">
+                                    {comentario.data instanceof Date 
+                                      ? comentario.data.toLocaleDateString() 
+                                      : new Date(comentario.data?.seconds * 1000).toLocaleDateString()}
+                                  </span>
+                                </div>
+                                <p className="text-sm text-gray-700 leading-relaxed">{comentario.texto}</p>
                               </div>
-                              <p className="text-sm text-gray-700">{comentario.texto}</p>
-                            </div>
-                          ))}
+                            ))}
+                          </div>
                         </div>
                       )}
 
                       {/* Campo para adicionar comentário */}
-                      {isQuestaoParceiro && (
-                        <div className="mt-4">
-                          {questaoParaComentar === questao.id ? (
-                            <div className="space-y-2">
-                              <textarea
-                                value={comentarioParaQuestao}
-                                onChange={(e) => setComentarioParaQuestao(e.target.value)}
-                                placeholder="Digite seu comentário para esta questão..."
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                rows={2}
-                              />
-                              <div className="flex space-x-2">
-                                <button
-                                  onClick={() => adicionarComentarioParaQuestao(questao.id)}
-                                  className="bg-blue-600 text-white px-3 py-1 rounded text-sm font-medium hover:bg-blue-700"
-                                >
-                                  Adicionar Comentário
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setQuestaoParaComentar(null);
-                                    setComentarioParaQuestao('');
-                                  }}
-                                  className="bg-gray-600 text-white px-3 py-1 rounded text-sm font-medium hover:bg-gray-700"
-                                >
-                                  Cancelar
-                                </button>
-                              </div>
+                      <div className="mt-4">
+                        {questaoParaComentar === questao.id ? (
+                          <div className="space-y-3">
+                            <h5 className="text-sm font-medium text-gray-700">Adicionar comentário:</h5>
+                            <textarea
+                              value={comentarioParaQuestao}
+                              onChange={(e) => setComentarioParaQuestao(e.target.value)}
+                              placeholder="Digite seu comentário sobre esta questão..."
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                              rows={3}
+                            />
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => adicionarComentarioParaQuestao(questao.id)}
+                                className="bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700"
+                              >
+                                Comentar
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setQuestaoParaComentar(null);
+                                  setComentarioParaQuestao('');
+                                }}
+                                className="bg-gray-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-gray-700"
+                              >
+                                Cancelar
+                              </button>
                             </div>
-                          ) : (
-                            <button
-                              onClick={() => setQuestaoParaComentar(questao.id)}
-                              className="bg-blue-600 text-white px-3 py-1 rounded text-sm font-medium hover:bg-blue-700"
-                            >
-                              Adicionar Comentário
-                            </button>
-                          )}
-                        </div>
-                      )}
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setQuestaoParaComentar(questao.id)}
+                            className="bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700"
+                          >
+                            💬 Comentar
+                          </button>
+                        )}
+                      </div>
                     </div>
                     
                     {!isQuestaoParceiro && (

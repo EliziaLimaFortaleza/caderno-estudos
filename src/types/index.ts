@@ -25,7 +25,6 @@ export interface Questao {
   userId: string;
   enunciado: string;
   comentario?: string;
-  comentarioParceiro?: string;
   comentarios?: {
     [userId: string]: {
       texto: string;
