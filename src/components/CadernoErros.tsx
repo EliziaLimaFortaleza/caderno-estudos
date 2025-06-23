@@ -59,6 +59,8 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
     (async () => {
       // Buscar config do usuário logado
       const minhaConfig = await usuarioService.obterConfiguracao(currentUser.uid);
+      console.log('Configuração carregada:', minhaConfig);
+      
       // Buscar config do parceiro, se houver
       if (minhaConfig?.parceiroEmail) {
         const parceiroConfig = await usuarioService.buscarUsuarioPorEmail(minhaConfig.parceiroEmail);
