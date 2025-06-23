@@ -40,6 +40,7 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
 
   useEffect(() => {
     if (!currentUser) return;
+    console.log('Carregando apelidos - versão atualizada');
     (async () => {
       // Buscar config do usuário logado
       const minhaConfig = await usuarioService.obterConfiguracao(currentUser.uid);
