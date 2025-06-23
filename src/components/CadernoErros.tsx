@@ -26,6 +26,7 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
   const [visualizandoParceiro, setVisualizandoParceiro] = useState(false);
   const [comentarioParaQuestao, setComentarioParaQuestao] = useState('');
   const [questaoParaComentar, setQuestaoParaComentar] = useState<string | null>(null);
+  const [apelidoParceiro, setApelidoParceiro] = useState('');
 
   useEffect(() => {
     if (currentUser) {
@@ -56,6 +57,7 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
       if (config?.parceiroEmail) {
         const parceiroData = await usuarioService.buscarUsuarioPorEmail(config.parceiroEmail);
         setParceiro(parceiroData);
+        setApelidoParceiro(config.apelidoParceiro || '');
         
         // Carregar questões do parceiro
         if (parceiroData) {
@@ -173,7 +175,7 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
   }
 
   const questoesAtuais = visualizandoParceiro ? questoesParceiro : questoes;
-  const tituloSecao = visualizandoParceiro ? `Questões do Parceiro (${questoesParceiro.length})` : `Minhas Questões (${questoes.length})`;
+  const tituloSecao = visualizandoParceiro ? `Questões do ${apelidoParceiro || 'Parceiro'} (${questoesParceiro.length})` : `Minhas Questões (${questoes.length})`;
 
   if (loading) {
     return (
@@ -193,7 +195,7 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
               onClick={() => setVisualizandoParceiro(!visualizandoParceiro)}
               className="bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-purple-700"
             >
-              {visualizandoParceiro ? 'Ver Minhas Questões' : 'Ver Questões do Parceiro'}
+              {visualizandoParceiro ? 'Ver Minhas Questões' : `Ver Questões do ${apelidoParceiro || 'Parceiro'}`}
             </button>
           )}
           <button
@@ -327,7 +329,7 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
         {questoesAtuais.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-500 text-lg">
-              {visualizandoParceiro ? 'Seu parceiro ainda não criou questões.' : 'Nenhuma questão cadastrada ainda.'}
+              {visualizandoParceiro ? `${apelidoParceiro || 'Seu parceiro'} ainda não criou questões.` : 'Nenhuma questão cadastrada ainda.'}
             </p>
             <p className="text-gray-400 text-sm mt-2">
               {visualizandoParceiro ? 'Peça para ele criar algumas questões!' : 'Comece criando sua primeira questão!'}
@@ -357,7 +359,7 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
                       {questao.comentario && (
                         <div className="mb-3">
                           <h4 className="font-medium text-gray-900 mb-1">
-                            {isQuestaoParceiro ? 'Comentário do Parceiro:' : 'Meu Comentário:'}
+                            {isQuestaoParceiro ? `Comentário do ${apelidoParceiro || 'Parceiro'}:` : 'Meu Comentário:'}
                           </h4>
                           <p className="text-gray-600 text-sm bg-gray-50 p-2 rounded">{questao.comentario}</p>
                         </div>

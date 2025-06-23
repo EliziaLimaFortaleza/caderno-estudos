@@ -18,7 +18,8 @@ export function PainelDesempenho({ estudos }: PainelDesempenhoProps) {
   const [configuracao, setConfiguracao] = useState({
     concurso: '',
     cargo: '',
-    parceiroEmail: ''
+    parceiroEmail: '',
+    apelidoParceiro: ''
   });
   const [parceiro, setParceiro] = useState<any>(null);
   const [visualizandoParceiro, setVisualizandoParceiro] = useState(false);
@@ -59,7 +60,8 @@ export function PainelDesempenho({ estudos }: PainelDesempenhoProps) {
         setConfiguracao({
           concurso: config.concurso || '',
           cargo: config.cargo || '',
-          parceiroEmail: config.parceiroEmail || ''
+          parceiroEmail: config.parceiroEmail || '',
+          apelidoParceiro: config.apelidoParceiro || ''
         });
         if (config.parceiroEmail) {
           await carregarParceiro(config.parceiroEmail);
@@ -84,6 +86,17 @@ export function PainelDesempenho({ estudos }: PainelDesempenhoProps) {
     } catch (error) {
       console.error('Erro ao salvar configuração:', error);
       alert('Erro ao salvar configuração');
+    }
+  }
+
+  async function salvarApelidoParceiro() {
+    if (!currentUser || !configuracao.apelidoParceiro.trim()) return;
+    try {
+      await usuarioService.salvarApelidoParceiro(currentUser.uid, configuracao.apelidoParceiro);
+      alert('Apelido salvo com sucesso!');
+    } catch (error) {
+      console.error('Erro ao salvar apelido:', error);
+      alert('Erro ao salvar apelido');
     }
   }
 
@@ -191,7 +204,26 @@ export function PainelDesempenho({ estudos }: PainelDesempenhoProps) {
           {configuracao.parceiroEmail && parceiro ? (
             <div className="space-y-3">
               <div className="flex items-center space-x-4">
-                <span className="text-gray-800">{configuracao.parceiroEmail}</span>
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-gray-800 font-medium">
+                      {configuracao.apelidoParceiro || 'Sem apelido'}
+                    </span>
+                    <button
+                      onClick={() => {
+                        const novoApelido = prompt('Digite o apelido do seu parceiro:', configuracao.apelidoParceiro);
+                        if (novoApelido !== null) {
+                          setConfiguracao(prev => ({ ...prev, apelidoParceiro: novoApelido }));
+                          usuarioService.salvarApelidoParceiro(currentUser!.uid, novoApelido);
+                        }
+                      }}
+                      className="text-blue-600 hover:text-blue-800 text-xs font-medium"
+                    >
+                      ✏️ Editar apelido
+                    </button>
+                  </div>
+                  <div className="text-sm text-gray-500">{configuracao.parceiroEmail}</div>
+                </div>
                 <button
                   onClick={removerParceiro}
                   className="text-red-600 hover:text-red-800 text-xs font-medium border border-red-200 rounded px-2 py-1"

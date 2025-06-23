@@ -18,6 +18,7 @@ interface ConfiguracaoUsuario {
   email?: string;
   parceiroEmail?: string;
   parceiroId?: string;
+  apelidoParceiro?: string;
   updatedAt: any;
 }
 
@@ -91,12 +92,26 @@ export const usuarioService = {
     }
   },
 
+  async salvarApelidoParceiro(userId: string, apelido: string): Promise<void> {
+    try {
+      const docRef = doc(db, 'usuarios', userId);
+      await updateDoc(docRef, {
+        apelidoParceiro: apelido,
+        updatedAt: serverTimestamp()
+      });
+    } catch (error: any) {
+      console.error('Erro ao salvar apelido do parceiro:', error);
+      throw new Error(`Erro ao salvar apelido: ${error.message || 'Erro desconhecido'}`);
+    }
+  },
+
   async removerParceiro(userId: string): Promise<void> {
     try {
       const docRef = doc(db, 'usuarios', userId);
       await updateDoc(docRef, {
         parceiroEmail: '',
         parceiroId: '',
+        apelidoParceiro: '',
         updatedAt: serverTimestamp()
       });
     } catch (error: any) {
