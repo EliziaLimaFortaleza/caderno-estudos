@@ -47,9 +47,9 @@ export function Dashboard() {
 
   const tabs = [
     { id: 'desempenho', label: 'Desempenho', icon: '📊' },
-    { id: 'estudos', label: 'Meus Estudos', icon: '📚' },
-    { id: 'revisoes', label: 'Revisões', icon: '🔄' },
     { id: 'caderno-erros', label: 'Caderno de Erros', icon: '❌' },
+    { id: 'estudos', label: 'Matérias', icon: '📚' },
+    { id: 'revisoes', label: 'Revisões', icon: '🔄' },
   ];
 
   return (

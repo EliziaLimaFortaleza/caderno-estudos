@@ -127,7 +127,7 @@ export function ListaEstudos({ estudos, onEstudoAtualizado }: ListaEstudosProps)
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">Meus Estudos</h2>
+        <h2 className="text-2xl font-bold text-gray-900">Matérias</h2>
         <div className="flex items-center space-x-4">
           <div className="text-sm text-gray-500">
             Total: {estudos.length} estudos
@@ -262,7 +262,11 @@ export function ListaEstudos({ estudos, onEstudoAtualizado }: ListaEstudosProps)
                       <span className="font-medium">Assunto:</span> {estudo.assunto}
                     </p>
                     <p className="text-xs text-gray-400">
-                      Criado em: {estudo.createdAt instanceof Date ? estudo.createdAt.toLocaleDateString() : 'Data não disponível'}
+                      Criado em: {estudo.createdAt ? (
+                        estudo.createdAt instanceof Date ? 
+                          estudo.createdAt.toLocaleDateString('pt-BR') : 
+                          new Date((estudo.createdAt as any).seconds * 1000).toLocaleDateString('pt-BR')
+                      ) : 'Data não disponível'}
                     </p>
                   </div>
                   

@@ -17,7 +17,8 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
     estudoId: '',
     enunciado: '',
     comentario: '',
-    acertou: undefined as boolean | undefined
+    acertou: undefined as boolean | undefined,
+    comentarioParceiro: ''
   });
 
   useEffect(() => {
@@ -59,6 +60,7 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
           estudoId: formData.estudoId,
           enunciado: formData.enunciado,
           comentario: formData.comentario,
+          comentarioParceiro: formData.comentarioParceiro,
           userId: currentUser.uid
         };
         
@@ -101,8 +103,9 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
     setFormData({
       estudoId: questao.estudoId,
       enunciado: questao.enunciado,
-      comentario: questao.comentario,
-      acertou: questao.acertou
+      comentario: questao.comentario || '',
+      acertou: questao.acertou,
+      comentarioParceiro: questao.comentarioParceiro || ''
     });
     setMostrarFormulario(true);
   }
@@ -112,7 +115,8 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
       estudoId: '',
       enunciado: '',
       comentario: '',
-      acertou: undefined
+      acertou: undefined,
+      comentarioParceiro: ''
     });
     setEditandoId(null);
     setMostrarFormulario(false);
@@ -202,6 +206,21 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
               />
             </div>
 
+            <div>
+              <label htmlFor="comentarioParceiro" className="block text-sm font-medium text-gray-700 mb-2">
+                Comentário para Parceiro
+              </label>
+              <textarea
+                id="comentarioParceiro"
+                name="comentarioParceiro"
+                value={formData.comentarioParceiro || ''}
+                onChange={(e) => setFormData({...formData, comentarioParceiro: e.target.value})}
+                rows={2}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="Dica ou comentário para seu parceiro de estudos..."
+              />
+            </div>
+
             <div className="flex space-x-4">
               <button
                 type="submit"
@@ -244,13 +263,24 @@ export function CadernoErros({ estudos }: CadernoErrosProps) {
                           <span className="font-medium">Assunto:</span> {estudo.materia} - {estudo.assunto}
                         </div>
                       )}
-                      <h4 className="text-lg font-medium text-gray-900 mb-2">
-                        {questao.enunciado}
-                      </h4>
+                      
+                      <div className="mb-3">
+                        <h4 className="font-medium text-gray-900 mb-2">Enunciado:</h4>
+                        <p className="text-gray-700 whitespace-pre-wrap">{questao.enunciado}</p>
+                      </div>
+
                       {questao.comentario && (
-                        <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-md">
-                          <span className="font-medium">Comentário:</span> {questao.comentario}
-                        </p>
+                        <div className="mb-3">
+                          <h4 className="font-medium text-gray-900 mb-1">Meu Comentário:</h4>
+                          <p className="text-gray-600 text-sm bg-gray-50 p-2 rounded">{questao.comentario}</p>
+                        </div>
+                      )}
+
+                      {questao.comentarioParceiro && (
+                        <div className="mb-3">
+                          <h4 className="font-medium text-blue-900 mb-1">💡 Dica para Parceiro:</h4>
+                          <p className="text-blue-700 text-sm bg-blue-50 p-2 rounded border-l-4 border-blue-300">{questao.comentarioParceiro}</p>
+                        </div>
                       )}
                     </div>
                     

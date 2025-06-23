@@ -24,10 +24,11 @@ export interface Questao {
   estudoId: string;
   userId: string;
   enunciado: string;
-  comentario: string;
+  comentario?: string;
+  comentarioParceiro?: string;
   acertou?: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | any;
+  updatedAt: Date | any;
 }
 
 export interface Usuario {
